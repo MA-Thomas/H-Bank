@@ -14,10 +14,7 @@ mod lib_contract_structs_enums;
 ////////////   Bind these function names, data types to their full module paths         //////////////
 // use lib_io::{}; 
 use lib_contracts::{HealthDataContract};
-use lib_contract_structs_enums::{ContractCategory, ContractLegalFramework, 
-    DataConsultant, DataCustodian, DataGenerator, DataOriginator, DataRecipient, Donor, Funder, HBank, 
-    IsAgent, IsConsultant, IsDonor, IsFunder, IsGenerator, IsHBank, Party, 
-    StorageLegalStructure, DonationLegalStructure, TransactionLegalStructure, TwoPartyLegalStructure};
+use lib_contract_structs_enums::{ContractCategory, ContractLegalFramework, DataConsultant, DataCustodian, DataGenerator, DataOriginator, DataRecipient, DonationLegalStructure, Donor, Funder, GeneratorRateSpecification, HBank, IsAgent, IsConsultant, IsDonor, IsFunder, IsGenerator, IsHBank, Party, StorageLegalStructure, TransactionLegalStructure, TwoPartyLegalStructure};
 
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
@@ -60,6 +57,11 @@ fn main() {
 
     let legal_framework: ContractLegalFramework = ContractLegalFramework::CommonLaw;
 
+    let generator_rate_spec = GeneratorRateSpecification::NotApplicable;
+    // let generator_rate_spec = GeneratorRateSpecification::KnowledgeRate(0.05);
+    // let generator_rate_spec = GeneratorRateSpecification::UsageRate(0.01);
+
+    
     // Explicitly annotate the type of `contract` to resolve type inference issues
     let mut contract: HealthDataContract<DataCustodian, DataRecipient, DataConsultant, Donor, Funder, DataGenerator, HBank> =
         HealthDataContract::new(
@@ -67,6 +69,7 @@ fn main() {
             contract_category,
             legal_framework,
             "Sample terms.".to_string(),
+            generator_rate_spec,
         );
 
     // Define parties to add as Boxed references to dynamic trait objects
@@ -88,6 +91,15 @@ fn main() {
 
     // Adding additional terms to the contract
     contract.add_terms(" Additional terms: Confidentiality, data security.");
+
+    // Make sure the Generator Rate Specification (knowledge rate, usage rate, N/A) 
+    // is set appropriately based on the parties to the contract.
+    contract.validate_generator_rate_spec();
+    match contract.validate_generator_rate_spec() {
+        Ok(_) => println!("Generator rate specification is valid."),
+        Err(e) => eprintln!("Error: {}", e),
+    }
+
 
     // Use contract...
 }

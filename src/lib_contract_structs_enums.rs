@@ -2,7 +2,7 @@ use std::any::{Any, TypeId};
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// DEFINE AGENT ROLES.
+// DEFINE THE 8 ROLES (STRUCTS).
 #[derive(Clone)]
 pub struct HBank{
     pub name: String,
@@ -55,7 +55,7 @@ pub struct Donor{
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// DEFINE TRAITS APPLICABLE TO AGENTS and other Parties.
+// DEFINE TRAITS APPLICABLE TO THE 8 ROLES.
 pub trait Party: Any {
     fn name(&self) -> &str;
 }
@@ -82,7 +82,7 @@ pub trait IsDonor {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// IMPLEMENT PARTY TRAIT FOR ALL AGENT STRUCTS (and other potential parties to a contract).
+// IMPLEMENT THE PARTY TRAIT FOR ALL 8 ROLES.
 impl Party for HBank {
     fn name(&self) -> &str {
         &self.name
@@ -128,7 +128,7 @@ impl Party for Donor {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// IMPLEMENT MORE SPECIFIC TRAITS IN A CASE BY CASE MANNER.
+// IMPLEMENT THE NON-PARTY TRAITS IN A CASE BY CASE MANNER.
 impl IsHBank for HBank {
     fn get_name(&self) -> &str {
         &self.name
@@ -188,8 +188,8 @@ impl IsGenerator for DataGenerator {
 
 
 
-
-// NEXT, DEFINE THE STORAGE AND TRANSACTION LEGAL STRUCTURES, INCLUDING THE AGREEMENT TYPES.
+////////////////////////////////////////////////////////////////////////////////////////////
+// NEXT, DEFINE THE STORAGE AND TRANSACTION LEGAL STRUCTURES.
 pub enum StorageLegalStructure {
     AgentStorageAgreement { 
         agent: Box<dyn IsAgent>, 
@@ -292,7 +292,10 @@ pub enum TransactionLegalStructure {
     },
     // An agreement between two sets of data agents where health data is exchanged. Defines the terms of data exchange, including data formats, protocols for data transmission, security measures, and any reciprocal benefits. There is no compensation (aside from the HBroker processing fee).
 }
+////////////////////////////////////////////////////////////////////////////////////////////
 
+
+////////////////////////////////////////////////////////////////////////////////////////////
 // Define an enum to distinguish between Storage and Donation structures
 pub enum TwoPartyLegalStructure {
     Storage(StorageLegalStructure),
@@ -319,3 +322,15 @@ Structs: StorageLegalStructure and TransactionLegalStructure include the various
 Enum: ContractCategory uses generics to enforce that TwoParty contracts involve HBank and one other agent, and ThreePlusParty contracts involve HBank and two other agents.
 */
 
+////////////////////////////////////////////////////////////////////////////////////////////
+// NEXT, DEFINE ENUMS FOR FINANCIAL ASPECTS OF CONTRACTS
+pub enum GeneratorRateSpecification {
+    // Both variants hold an f64 which is the percentage of contract compensation 
+    // to be given to the data generator.
+    
+    KnowledgeRate(f64),
+    // Applies to first transaction of a datum. 
+    UsageRate(f64),
+    // Applies to subsequent transactions
+    NotApplicable,
+}

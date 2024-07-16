@@ -1,3 +1,4 @@
+use std::fmt;
 use std::any::{Any, TypeId};
 
 use std::marker::PhantomData;
@@ -5,8 +6,8 @@ use std::marker::PhantomData;
 use crate::lib_contract_structs_enums::{IsHBank, IsAgent, IsConsultant, IsGenerator, IsFunder, IsDonor, Party,
     HBank, DataOriginator, DataCustodian, DataRecipient, Funder, Donor,
     StorageLegalStructure, DonationLegalStructure, TransactionLegalStructure,
-    TwoPartyLegalStructure, ContractCategory,
-    ContractLegalFramework};
+    TwoPartyLegalStructure, ContractCategory, ContractLegalFramework,
+    GeneratorRateSpecification};
 
 
 // Function to check if a party matches a type (useful for checking if party to be added is compatible with agreement_type)
@@ -17,12 +18,22 @@ fn party_is<T: Party>(party: &dyn Party) -> bool {
     TypeId::of::<T>() == party.type_id()
 }
 
+// Define a custom error type for validation errors
+#[derive(Debug)]
+pub struct ValidationError(String);
+impl fmt::Display for ValidationError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Validation Error: {}", self.0)
+    }
+}
+
 // ********* BRING IT ALL TOGETHER. USE THE DEFINED DATA TYPES TO DEFINE A HEALTHDATACONTRACT ********* 
 pub struct HealthDataContract<A, B, C, D, F, G, H> {
     parties: Vec<Box<dyn Party>>,
     agreement_type: ContractCategory,
     legal_framework: ContractLegalFramework,
     terms: String,
+    generator_rate: GeneratorRateSpecification,
     _phantom: PhantomData<(A, B, C, D, F, G, H)>, // PhantomData to indicate unused type parameters (they will be used later for type checking)
 }
 
@@ -42,12 +53,16 @@ where
         agreement_type: ContractCategory,
         legal_framework: ContractLegalFramework,
         terms: String,
+        generator_rate: GeneratorRateSpecification,
     ) -> Self {
+
+        // Assign default value if None
         HealthDataContract {
             parties,
             agreement_type,
             legal_framework,
             terms,
+            generator_rate,
             _phantom: PhantomData, // Initialize PhantomData without any value
         }
     }
@@ -55,6 +70,8 @@ where
     pub fn add_terms(&mut self, terms: &str) {
         self.terms.push_str(terms);
     }
+
+
 
     pub fn add_parties(&mut self, parties: Vec<Box<dyn Party>>) {
         match &self.agreement_type {
@@ -220,5 +237,21 @@ where
     }
     
 
+    // Helper function to check if parties include a generator
+    fn validate_parties_have_generator(&self) -> bool {
+        self.parties.iter().any(|party| party_is::<G>(&**party))
+    }
+
+    // Method to validate generator_rate specification after parties are added
+    pub fn validate_generator_rate_spec(&self) -> Result<(), ValidationError> {
+        let generator_present = self.validate_parties_have_generator();
+
+        match (generator_present, &self.generator_rate) {
+            (false, GeneratorRateSpecification::NotApplicable) => Ok(()),
+            (false, _) => Err(ValidationError("No parties implement IsGenerator, but generator_rate is not set to NotApplicable.".into())),
+            (true, GeneratorRateSpecification::NotApplicable) => Err(ValidationError("At least one party implements IsGenerator, but generator_rate is set to NotApplicable.".into())),
+            (true, _) => Ok(()),
+        }
+    }
         // Other methods...
 }
