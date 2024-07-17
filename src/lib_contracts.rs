@@ -3,11 +3,11 @@ use std::any::{Any, TypeId};
 
 use std::marker::PhantomData;
 
-use crate::lib_contract_structs_enums::{IsHBank, IsAgent, IsConsultant, IsGenerator, IsFunder, IsDonor, Party,
-    HBank, DataOriginator, DataCustodian, DataRecipient, Funder, Donor,
-    StorageLegalStructure, DonationLegalStructure, TransactionLegalStructure,
-    TwoPartyLegalStructure, ContractCategory, ContractLegalFramework,
-    GeneratorRateSpecification};
+use crate::lib_contract_structs_enums::{ContractCategory, ContractLegalFramework, 
+    DataCustodian, DataOriginator, DataRecipient, DonationLegalStructure, Donor, Funder, HBank,
+    GeneratorRateSpecification, IndividualContributionLevel, 
+    IsAgent, IsOriginator, IsRecipient, IsConsultant, IsDonor, IsFunder, IsGenerator, IsHBank, Party, 
+    StorageLegalStructure, TransactionLegalStructure, TwoPartyLegalStructure};
 
 
 // Function to check if a party matches a type (useful for checking if party to be added is compatible with agreement_type)
@@ -27,25 +27,39 @@ impl fmt::Display for ValidationError {
     }
 }
 
-// ********* BRING IT ALL TOGETHER. USE THE DEFINED DATA TYPES TO DEFINE A HEALTHDATACONTRACT ********* 
-pub struct HealthDataContract<A, B, C, D, F, G, H> {
+// ********* BRING IT ALL TOGETHER. USE THE DEFINED DATA TYPES TO DEFINE A HealthDataContract ********* 
+/*
+A : the data provider 
+B : the data recipient 
+C : the third-party service provider 
+D : the donor (to HBank)
+F : the funder (e.g., of research)
+G : the data generator (e.g., a hospital)
+O : the data originator (e.g., an individual person)
+H : the HBank
+
+Not all roles need to be present as parties to a contract, but all need to be part of the contract specification.
+*/
+pub struct HealthDataContract<A, B, C, D, F, G, O, H> {
     parties: Vec<Box<dyn Party>>,
     agreement_type: ContractCategory,
     legal_framework: ContractLegalFramework,
     terms: String,
     generator_rate: GeneratorRateSpecification,
-    _phantom: PhantomData<(A, B, C, D, F, G, H)>, // PhantomData to indicate unused type parameters (they will be used later for type checking)
+    individual_contribution_level: IndividualContributionLevel,
+    _phantom: PhantomData<(A, B, C, D, F, G, O, H)>, // PhantomData to indicate unused type parameters (they will be used later for type checking)
 }
 
 
-impl<A, B, C, D, F, G, H> HealthDataContract<A, B, C, D, F, G, H> 
+impl<A, B, C, D, F, G, O, H> HealthDataContract<A, B, C, D, F, G, O, H> 
 where 
     A: IsAgent + Party + 'static,
-    B: IsAgent + Party + 'static,
+    B: IsAgent + IsRecipient + Party + 'static,
     C: IsConsultant + Party + 'static,
     D: IsDonor + Party + 'static,
     F: IsFunder + Party + 'static,
     G: IsGenerator + Party + 'static,
+    O: IsAgent + IsOriginator + Party + 'static,
     H: IsHBank + Party + 'static,
 {
     pub fn new(
@@ -54,6 +68,7 @@ where
         legal_framework: ContractLegalFramework,
         terms: String,
         generator_rate: GeneratorRateSpecification,
+        individual_contribution_level: IndividualContributionLevel,
     ) -> Self {
 
         // Assign default value if None
@@ -63,6 +78,7 @@ where
             legal_framework,
             terms,
             generator_rate,
+            individual_contribution_level,
             _phantom: PhantomData, // Initialize PhantomData without any value
         }
     }
@@ -70,8 +86,6 @@ where
     pub fn add_terms(&mut self, terms: &str) {
         self.terms.push_str(terms);
     }
-
-
 
     pub fn add_parties(&mut self, parties: Vec<Box<dyn Party>>) {
         match &self.agreement_type {
@@ -223,7 +237,7 @@ where
                         }
     
                         let agent_a_found = parties.iter().any(|party| party_is::<A>(&**party));
-                        let agent_b_found = parties.iter().any(|party| party_is::<B>(&**party));
+                        let agent_b_found = parties.iter().any(|party| party_is::<A>(&**party));
                         let generators_found = parties.iter().any(|party| party_is::<G>(&**party));
                         let h_bank_found = parties.iter().any(|party| party_is::<H>(&**party));
     
@@ -237,14 +251,12 @@ where
     }
     
 
-    // Helper function to check if parties include a generator
-    fn validate_parties_have_generator(&self) -> bool {
+    // Method to validate generator_rate specification after parties are added.
+    fn determine_whether_parties_have_generator(&self) -> bool {
         self.parties.iter().any(|party| party_is::<G>(&**party))
     }
-
-    // Method to validate generator_rate specification after parties are added
     pub fn validate_generator_rate_spec(&self) -> Result<(), ValidationError> {
-        let generator_present = self.validate_parties_have_generator();
+        let generator_present = self.determine_whether_parties_have_generator();
 
         match (generator_present, &self.generator_rate) {
             (false, GeneratorRateSpecification::NotApplicable) => Ok(()),
@@ -252,6 +264,42 @@ where
             (true, GeneratorRateSpecification::NotApplicable) => Err(ValidationError("At least one party implements IsGenerator, but generator_rate is set to NotApplicable.".into())),
             (true, _) => Ok(()),
         }
+    }
+
+    // Method to validate individual contribution (data only, data & participation, neither) after parties are added.
+    fn determine_whether_parties_have_data_originator(&self) -> bool {
+        self.parties.iter().any(|party| party_is::<O>(&**party))
+    }
+    pub fn validate_individual_contribution_level(&self) -> Result<(), ValidationError> {
+        let originator_present = self.determine_whether_parties_have_data_originator();
+
+        match (originator_present, &self.individual_contribution_level) {
+            (false, IndividualContributionLevel::NotApplicable) => Ok(()),
+            (false, IndividualContributionLevel::DataOnly) => Ok(()),
+            (false, IndividualContributionLevel::DataAndParticipation) => Err(ValidationError("No parties implement IsOriginator, but individual_contribution_level is set to DataAndParticipation.".to_string())),
+            (true, IndividualContributionLevel::DataOnly) => Ok(()),
+            (true, IndividualContributionLevel::DataAndParticipation) => Ok(()),
+            (true, IndividualContributionLevel::NotApplicable) => Err(ValidationError("At least one party implements IsOriginator, but individual_contribution_level is set to NotApplicable.".to_string())),
+        }
+    }
+
+
+    
+    pub fn validate_and_execute_contract(&self) -> Result<(), ValidationError> {
+        /*
+        Calls methods beginning with 'validate_'. This method should be called as the penultimate step before 
+        a contract is executed.
+         */
+        match self.validate_generator_rate_spec() {
+            Ok(_) => println!("Generator rate specification is valid."),
+            Err(e) => eprintln!("Error: {}", e),
+        }
+        match self.validate_individual_contribution_level() {
+            Ok(_) => println!("Individual contribution level is valid."),
+            Err(e) => eprintln!("Error: {}", e),
+        }
+        Ok(())
+
     }
         // Other methods...
 }

@@ -64,6 +64,12 @@ pub trait IsHBank {
 }
 pub trait IsAgent {
     fn get_name(&self) -> &str;
+}
+pub trait IsOriginator {
+    fn get_name(&self) -> &str;
+} 
+pub trait IsRecipient {
+    fn get_name(&self) -> &str;
 } 
 pub trait IsConsultant {
     fn get_name(&self) -> &str;
@@ -134,6 +140,16 @@ impl IsHBank for HBank {
         &self.name
     }
 }
+impl IsOriginator for DataOriginator {
+    fn get_name(&self) -> &str {
+        &self.name
+    }
+} 
+impl IsRecipient for DataRecipient {
+    fn get_name(&self) -> &str {
+        &self.name
+    }
+} 
 
 // An agent is a person or entity (excluding HBank) that has some degree of agency over health data. 
 impl IsAgent for DataOriginator {
@@ -326,11 +342,24 @@ Enum: ContractCategory uses generics to enforce that TwoParty contracts involve 
 // NEXT, DEFINE ENUMS FOR FINANCIAL ASPECTS OF CONTRACTS
 pub enum GeneratorRateSpecification {
     // Both variants hold an f64 which is the percentage of contract compensation 
-    // to be given to the data generator.
+    // to be given to the data generator. The Usage/Knowledge rate depends on how many times 
+    // the all or a portion of the data bundle has been previously transacted. 
     
     KnowledgeRate(f64),
     // Applies to first transaction of a datum. 
     UsageRate(f64),
-    // Applies to subsequent transactions
+    // Applies to subsequent transactions.
     NotApplicable,
+    // Applies when no generator is part of the contract.
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// NEXT, DEFINE ENUMS FOR INDIVIDUAL USER ASPECTS OF CONTRACTS
+pub enum IndividualContributionLevel {
+    DataOnly,
+    // Possible for any contract agreement, any party composition.
+    DataAndParticipation,
+    // A DataOriginator must be party to the contract.
+    NotApplicable,
+    // A DataOriginator must NOT be party to the contract.
 }
