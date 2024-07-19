@@ -1,52 +1,62 @@
 use std::any::{Any, TypeId};
+use std::fmt::Debug;
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // DEFINE THE 8 ROLES (STRUCTS).
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct HBank{
     pub name: String,
+    pub entity_id: String,
     // Add more attributes as needed
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DataOriginator{
     pub name: String,
+    pub entity_id: String,
     // Add more attributes as needed
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DataCustodian{
     pub name: String,
+    pub entity_id: String,
     // Add more attributes as needed
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DataRecipient{
     pub name: String,
+    pub entity_id: String,
     // Add more attributes as needed
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DataConsultant{
     pub name: String,
+    pub entity_id: String,
     // Add more attributes as needed
 }
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DataGenerator{
     pub name: String,
+    pub entity_id: String,
     // Add more attributes as needed
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Funder{
     pub name: String,
+    pub entity_id: String,
     // Add more attributes as needed
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Donor{
     pub name: String,
+    pub entity_id: String,
     // Add more attributes as needed
 }
 
@@ -56,33 +66,22 @@ pub struct Donor{
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // DEFINE TRAITS APPLICABLE TO THE 8 ROLES.
+
 pub trait Party: Any {
-    fn name(&self) -> &str;
+    fn get_name(&self) -> &str;
+    fn get_entity_id(&self) -> &str;
 }
-pub trait IsHBank {
-    fn get_name(&self) -> &str;
-}
-pub trait IsAgent {
-    fn get_name(&self) -> &str;
-}
-pub trait IsOriginator {
-    fn get_name(&self) -> &str;
-} 
-pub trait IsRecipient {
-    fn get_name(&self) -> &str;
-} 
-pub trait IsConsultant {
-    fn get_name(&self) -> &str;
-}
-pub trait IsGenerator {
-    fn get_name(&self) -> &str;
-}
-pub trait IsFunder {
-    fn get_name(&self) -> &str;
-}
-pub trait IsDonor {
-    fn get_name(&self) -> &str;
-} 
+// Make sure that the Party trait is a supertrait of all other relevant traits.
+// These next lines ensure that each specific trait (IsHBank, IsAgent, IsOriginator, IsRecipient, etc.) 
+// inherits from the Party trait, making the name and entity_id method available to them.
+pub trait IsHBank: Party + Debug {}
+pub trait IsAgent: Party + Debug {}
+pub trait IsOriginator: Party + Debug {} 
+pub trait IsRecipient: Party + Debug {} 
+pub trait IsConsultant: Party + Debug {}
+pub trait IsGenerator: Party + Debug {}
+pub trait IsFunder: Party + Debug {}
+pub trait IsDonor: Party + Debug {} 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -90,43 +89,67 @@ pub trait IsDonor {
 ////////////////////////////////////////////////////////////////////////////////////////////
 // IMPLEMENT THE PARTY TRAIT FOR ALL 8 ROLES.
 impl Party for HBank {
-    fn name(&self) -> &str {
+    fn get_name(&self) -> &str {
         &self.name
+    }
+    fn get_entity_id(&self) -> &str {
+        &self.entity_id
     }
 }
 impl Party for DataOriginator {
-    fn name(&self) -> &str {
+    fn get_name(&self) -> &str {
         &self.name
+    }
+    fn get_entity_id(&self) -> &str {
+        &self.entity_id
     }
 }
 impl Party for DataCustodian {
-    fn name(&self) -> &str {
+    fn get_name(&self) -> &str {
         &self.name
+    }
+    fn get_entity_id(&self) -> &str {
+        &self.entity_id
     }
 }
 impl Party for DataRecipient {
-    fn name(&self) -> &str {
+    fn get_name(&self) -> &str {
         &self.name
+    }
+    fn get_entity_id(&self) -> &str {
+        &self.entity_id
     }
 }
 impl Party for DataConsultant {
-    fn name(&self) -> &str {
+    fn get_name(&self) -> &str {
         &self.name
+    }
+    fn get_entity_id(&self) -> &str {
+        &self.entity_id
     }
 }
 impl Party for DataGenerator {
-    fn name(&self) -> &str {
+    fn get_name(&self) -> &str {
         &self.name
+    }
+    fn get_entity_id(&self) -> &str {
+        &self.entity_id
     }
 }
 impl Party for Funder {
-    fn name(&self) -> &str {
+    fn get_name(&self) -> &str {
         &self.name
+    }
+    fn get_entity_id(&self) -> &str {
+        &self.entity_id
     }
 }
 impl Party for Donor {
-    fn name(&self) -> &str {
+    fn get_name(&self) -> &str {
         &self.name
+    }
+    fn get_entity_id(&self) -> &str {
+        &self.entity_id
     }
 }
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -135,77 +158,126 @@ impl Party for Donor {
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // IMPLEMENT THE NON-PARTY TRAITS IN A CASE BY CASE MANNER.
-impl IsHBank for HBank {
-    fn get_name(&self) -> &str {
-        &self.name
-    }
-}
-impl IsOriginator for DataOriginator {
-    fn get_name(&self) -> &str {
-        &self.name
-    }
-} 
-impl IsRecipient for DataRecipient {
-    fn get_name(&self) -> &str {
-        &self.name
-    }
-} 
+impl IsHBank for HBank {}
+impl IsOriginator for DataOriginator {} 
+impl IsRecipient for DataRecipient {} 
 
 // An agent is a person or entity (excluding HBank) that has some degree of agency over health data. 
-impl IsAgent for DataOriginator {
-    fn get_name(&self) -> &str {
-        &self.name
-    }
-}  // The person from whom data was generated.
-impl IsAgent for DataCustodian {
-    fn get_name(&self) -> &str {
-        &self.name
-    }
-}   // A person or entity with effective control over data (when different from the originator).
-impl IsAgent for DataRecipient {
-    fn get_name(&self) -> &str {
-        &self.name
-    }
-}   // A person or entity to whom data access is temporarily granted.
-impl IsAgent for DataConsultant {
-    fn get_name(&self) -> &str {
-        &self.name
-    }
-}  // A third party service provider, e.g., a person or entity engaged directly by the originator or custodian to temporarily access data in order to generate knowledge.
+impl IsAgent for DataOriginator {}  // The person from whom data was generated.
+impl IsAgent for DataCustodian {}   // A person or entity with effective control over data (when different from the originator).
+impl IsAgent for DataRecipient {}   // A person or entity to whom data access is temporarily granted.
+impl IsAgent for DataConsultant {}  // A third party service provider, e.g., a person or entity engaged directly by the originator or custodian to temporarily access data in order to generate knowledge.
 
-
-
-impl IsFunder for Funder {
-    fn get_name(&self) -> &str {
-        &self.name
-    }
-}
-impl IsDonor for Donor {
-    fn get_name(&self) -> &str {
-        &self.name
-    }
-}
-
-impl IsConsultant for DataConsultant {
-    fn get_name(&self) -> &str {
-        &self.name
-    }
-}
-impl IsGenerator for DataGenerator {
-    fn get_name(&self) -> &str {
-        &self.name
-    }
-}
+impl IsFunder for Funder {}
+impl IsDonor for Donor {}
+impl IsConsultant for DataConsultant {}
+impl IsGenerator for DataGenerator {}
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 
+////////////////////////////////////////////////////////////////////////////////////////////
+// NEXT, IMPLEMENT PartialEq FOR ALL OF THE BOXED DYNAMIC TRAIT OBJECTS 
+// SO WE CAN COMPARE TWO OBJECTS. ALSO IMPLEMENT PartialEq FOR AGREEMENT TYPES
+// ( NECESSARY FOR lib_contracts.rs -> HealthDataContract.eq(_,_) ).
+impl PartialEq for &Box<dyn IsHBank> {
+    fn eq(&self, other: &Self) -> bool {
+        // Dereference the boxes to access the underlying data
+        // and compare based on their names or other properties.
+        self.as_ref().get_entity_id() == other.as_ref().get_entity_id()
+    }
+}
+impl PartialEq for &Box<dyn IsAgent> {
+    fn eq(&self, other: &Self) -> bool {
+        // Dereference the boxes to access the underlying data
+        // and compare based on their names or other properties.
+        self.as_ref().get_entity_id() == other.as_ref().get_entity_id()
+    }
+}
+impl PartialEq for &Box<dyn IsOriginator> {
+    fn eq(&self, other: &Self) -> bool {
+        // Dereference the boxes to access the underlying data
+        // and compare based on their names or other properties.
+        self.as_ref().get_entity_id() == other.as_ref().get_entity_id()
+    }
+}
+impl PartialEq for &Box<dyn IsRecipient> {
+    fn eq(&self, other: &Self) -> bool {
+        // Dereference the boxes to access the underlying data
+        // and compare based on their names or other properties.
+        self.as_ref().get_entity_id() == other.as_ref().get_entity_id()
+    }
+}
+impl PartialEq for &Box<dyn IsGenerator> {
+    fn eq(&self, other: &Self) -> bool {
+        // Dereference the boxes to access the underlying data
+        // and compare based on their names or other properties.
+        self.as_ref().get_entity_id() == other.as_ref().get_entity_id()
+    }
+}
+impl PartialEq for &Box<dyn IsDonor> {
+    fn eq(&self, other: &Self) -> bool {
+        // Dereference the boxes to access the underlying data
+        // and compare based on their names or other properties.
+        self.as_ref().get_entity_id() == other.as_ref().get_entity_id()
+    }
+}
+impl PartialEq for &Box<dyn IsFunder> {
+    fn eq(&self, other: &Self) -> bool {
+        // Dereference the boxes to access the underlying data
+        // and compare based on their names or other properties.
+        self.as_ref().get_entity_id() == other.as_ref().get_entity_id()
+    }
+}
+impl PartialEq for &Box<dyn IsConsultant> {
+    fn eq(&self, other: &Self) -> bool {
+        // Dereference the boxes to access the underlying data
+        // and compare based on their names or other properties.
+        self.as_ref().get_entity_id() == other.as_ref().get_entity_id()
+    }
+}
 
-
+impl PartialEq for StorageLegalStructure {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (&StorageLegalStructure::AgentStorageAgreement { .. }, &StorageLegalStructure::AgentStorageAgreement { .. }) => true,
+            (&StorageLegalStructure::AgentServiceAgreement { .. }, &StorageLegalStructure::AgentServiceAgreement { .. }) => true,
+            (&StorageLegalStructure::GeneratorStorageAgreement { .. }, &StorageLegalStructure::GeneratorStorageAgreement { .. }) => true,
+            (&StorageLegalStructure::GeneratorServiceAgreement { .. }, &StorageLegalStructure::GeneratorServiceAgreement { .. }) => true,
+            _ => false,
+        }
+    }
+}
+impl PartialEq for DonationLegalStructure {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (&DonationLegalStructure::PhilanthropicAgreement { .. }, &DonationLegalStructure::PhilanthropicAgreement { .. }) => true,
+            _ => false,
+        }
+    }
+}
+impl PartialEq for TransactionLegalStructure {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (&TransactionLegalStructure::ConsultAgreement { .. }, &TransactionLegalStructure::ConsultAgreement { .. }) => true,
+            (&TransactionLegalStructure::DirectSale { .. }, &TransactionLegalStructure::DirectSale { .. }) => true,
+            (&TransactionLegalStructure::PurchaseAgreement { .. }, &TransactionLegalStructure::PurchaseAgreement { .. }) => true,
+            (&TransactionLegalStructure::LicensingAgreement { .. }, &TransactionLegalStructure::LicensingAgreement { .. }) => true,
+            (&TransactionLegalStructure::AccessAgreement { .. }, &TransactionLegalStructure::AccessAgreement { .. }) => true,
+            (&TransactionLegalStructure::SubscriptionAgreement { .. }, &TransactionLegalStructure::SubscriptionAgreement { .. }) => true,
+            (&TransactionLegalStructure::ConsortiumAgreement { .. }, &TransactionLegalStructure::ConsortiumAgreement { .. }) => true,
+            (&TransactionLegalStructure::FundingAgreement { .. }, &TransactionLegalStructure::FundingAgreement { .. }) => true,
+            (&TransactionLegalStructure::DataExchangeAgreement { .. }, &TransactionLegalStructure::DataExchangeAgreement { .. }) => true,
+            _ => false,
+        }
+    }
+}
+////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // NEXT, DEFINE THE STORAGE AND TRANSACTION LEGAL STRUCTURES.
+#[derive(Debug)]
 pub enum StorageLegalStructure {
     AgentStorageAgreement { 
         agent: Box<dyn IsAgent>, 
@@ -228,14 +300,18 @@ pub enum StorageLegalStructure {
     },
     //Service agreement would be used when data generator seeks to gain access to the HBroker platform.
 }
+
+#[derive(Debug)]
 pub enum DonationLegalStructure {
     PhilanthropicAgreement { 
         donor: Box<dyn IsDonor>, 
         h_bank: Box<dyn IsHBank>, 
     },
     //Philantropic entity provides donations to HBank.
+
 }
 
+#[derive(Debug)]
 pub enum TransactionLegalStructure {
 
     ConsultAgreement {
@@ -313,19 +389,21 @@ pub enum TransactionLegalStructure {
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Define an enum to distinguish between Storage and Donation structures
+#[derive(Debug, PartialEq)]
 pub enum TwoPartyLegalStructure {
     Storage(StorageLegalStructure),
     Donation(DonationLegalStructure),
 }
 
 // Define the 'ContractCategory' enum with the appropriate constraints
+#[derive(Debug, PartialEq)]
 pub enum ContractCategory {
     TwoParty(TwoPartyLegalStructure),
     ThreePlusParty(TransactionLegalStructure),
 }
 
 
-
+#[derive(Debug, PartialEq)]
 pub enum ContractLegalFramework {
     UCC,        // For tangible goods, e.g., hardware, biological samples, etc.
     CommonLaw,  // For services, intellectual property. THIS IS THE DEFAULT FOR H-BANK.
@@ -340,6 +418,7 @@ Enum: ContractCategory uses generics to enforce that TwoParty contracts involve 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // NEXT, DEFINE ENUMS FOR FINANCIAL ASPECTS OF CONTRACTS
+#[derive(Debug, PartialEq)]
 pub enum GeneratorRateSpecification {
     // Both variants hold an f64 which is the percentage of contract compensation 
     // to be given to the data generator. The Usage/Knowledge rate depends on how many times 
@@ -355,6 +434,7 @@ pub enum GeneratorRateSpecification {
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // NEXT, DEFINE ENUMS FOR INDIVIDUAL USER ASPECTS OF CONTRACTS
+#[derive(Debug, PartialEq)]
 pub enum IndividualContributionLevel {
     DataOnly,
     // Possible for any contract agreement, any party composition.

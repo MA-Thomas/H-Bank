@@ -39,6 +39,7 @@ O : the data originator (e.g., an individual person)
 H : the HBank
 
 Not all roles need to be present as parties to a contract, but all need to be part of the contract specification.
+For now, cohort_id is the only public field as it is the only field that needs to be used from other modules (i.e., lib_cohorts.rs)
 */
 pub struct HealthDataContract<A, B, C, D, F, G, O, H> {
     parties: Vec<Box<dyn Party>>,
@@ -47,6 +48,7 @@ pub struct HealthDataContract<A, B, C, D, F, G, O, H> {
     terms: String,
     generator_rate: GeneratorRateSpecification,
     individual_contribution_level: IndividualContributionLevel,
+    pub cohort_id: Option<String>,
     _phantom: PhantomData<(A, B, C, D, F, G, O, H)>, // PhantomData to indicate unused type parameters (they will be used later for type checking)
 }
 
@@ -69,6 +71,7 @@ where
         terms: String,
         generator_rate: GeneratorRateSpecification,
         individual_contribution_level: IndividualContributionLevel,
+        cohort_id: Option<String>,
     ) -> Self {
 
         // Assign default value if None
@@ -79,6 +82,7 @@ where
             terms,
             generator_rate,
             individual_contribution_level,
+            cohort_id,
             _phantom: PhantomData, // Initialize PhantomData without any value
         }
     }
@@ -284,7 +288,7 @@ where
     }
 
 
-    
+
     pub fn validate_and_execute_contract(&self) -> Result<(), ValidationError> {
         /*
         Calls methods beginning with 'validate_'. This method should be called as the penultimate step before 
@@ -303,3 +307,32 @@ where
     }
         // Other methods...
 }
+
+
+// This allows us to compare if two HealthDataContract's are equal (e.g., in lib_cohorts.rs).
+// Trait Inheritance: The Eq trait inherits from PartialEq, meaning any type that implements PartialEq correctly 
+// (such that equality is reflexive, symmetric, and transitive) will automatically satisfy the requirements of Eq.
+impl<A, B, C, D, F, G, O, H> Eq for HealthDataContract<A, B, C, D, F, G, O, H> {}
+
+
+impl<A, B, C, D, F, G, O, H> PartialEq for HealthDataContract<A, B, C, D, F, G, O, H> {
+    fn eq(&self, other: &Self) -> bool {
+        self.parties.len() == other.parties.len()
+            && self.parties.iter().zip(&other.parties).all(|(a, b)| party_eq(a, b))
+            && self.agreement_type == other.agreement_type
+            && self.legal_framework == other.legal_framework
+            && self.terms == other.terms
+            && self.generator_rate == other.generator_rate
+            && self.individual_contribution_level == other.individual_contribution_level
+            && self.cohort_id == other.cohort_id
+    }
+}
+
+// Helper function to compare Box<dyn Party> trait objects
+fn party_eq(a: &Box<dyn Party>, b: &Box<dyn Party>) -> bool {
+    // Implement the necessary logic to compare the trait objects.
+    // The Party trait does implement the name so we can compare 
+    // the entity IDs of the two objects that implement the Party trait.
+    a.get_entity_id() == b.get_entity_id()
+}
+
