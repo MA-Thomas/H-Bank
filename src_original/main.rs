@@ -10,14 +10,16 @@ use std::error::Error;
 mod lib_contracts; 
 mod lib_contract_structs_enums;
 mod lib_cohorts;
+mod lib_person; 
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 ////////////   Bind these function names, data types to their full module paths         //////////////
 // use lib_io::{}; 
 use lib_contracts::{HealthDataContract};
 use lib_contract_structs_enums::{ContractCategory, ContractLegalFramework, 
-    DataConsultant, DataCustodian, DataGenerator, DataOriginator, DataRecipient, Donor, Funder, HBank,
-    IsAgent, IsConsultant, IsDonor, IsFunder, IsGenerator, IsHBank, Party, 
+    DataConsultant, DataCustodian, DataGenerator, DataOriginator, DataRecipient, Donor, Advertiser, Funder, HBank,
+    IsAgent, IsConsultant, IsDonor, IsAdvertiser, IsFunder, IsGenerator, IsHBank, Party, 
     StorageLegalStructure, DonationLegalStructure, TransactionLegalStructure, 
     TwoPartyLegalStructure, 
     GeneratorRateSpecification, IndividualContributionLevel};
@@ -42,6 +44,7 @@ fn main() {
     let consultant: &dyn IsConsultant = &DataConsultant { name: "consulting firm".to_string(), entity_id: "3015_AR_>#_2055".to_string() };
     let generator: &dyn IsGenerator = &DataGenerator { name: "The Hospital".to_string(), entity_id: "3015_AR_>#_2044".to_string() };
     let funder: &dyn IsFunder = &Funder { name: "Big Money Foundation".to_string(), entity_id: "3015_AR_>#_2033".to_string() };
+    let advertiser: &dyn IsAdvertiser = &Advertiser { name: "Goog".to_string(), entity_id: "3015_AR_>#_2000".to_string() };
     let donor: &dyn IsDonor = &Donor { name: "Mystery Billionaire".to_string(), entity_id: "3015_AR_>#_2022".to_string() };
     let hbank: &dyn IsHBank = &HBank { name: "Reservatory".to_string(), entity_id: "3015_AR_>#_2011".to_string() };
 
@@ -67,12 +70,15 @@ fn main() {
 
     let individual_contribution_level = IndividualContributionLevel::NotApplicable;
 
+    let irb_required = false;
+    let irb_approved = None; 
+
     // The type of cohort_id is Option<String>. This means the ownership of the string contained in the Option<> 
     // will be passed to the contract (rather than borrowed which might introduce lifetime issues).
     let cohort_id = Some("abcdXYZ31415".to_string());
 
     // Explicitly annotate the type of `contract` to resolve type inference issues
-    let mut contract: HealthDataContract<DataCustodian, DataRecipient, DataConsultant, Donor, Funder, DataGenerator, DataOriginator, HBank> =
+    let mut contract: HealthDataContract<DataCustodian, DataRecipient, DataConsultant, Donor, Advertiser, Funder, DataGenerator, DataOriginator, HBank> =
         HealthDataContract::new(
             vec![],
             contract_category,
@@ -80,6 +86,8 @@ fn main() {
             "Sample terms.".to_string(),
             generator_rate_spec,
             individual_contribution_level,
+            irb_required,
+            irb_approved,
             cohort_id,
         );
 

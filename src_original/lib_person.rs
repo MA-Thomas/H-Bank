@@ -3,23 +3,30 @@ use regex::Regex;
 
 
 /*
-A Person is the source of the entity_id. For privacy reasons, Persons will not appear in contracts.
-DataOriginator's appear in contracts and their entity_id derives from that of a valid Person.
+A Person is linked uniquely to their person_id. For privacy reasons, Persons will not appear 
+in contracts since contracts are made public.
+DataOriginator's appear in contracts and their entity_id derives from (but is not identical to) 
+the person_id of the corresponding person.
+
+Idea: entity_id = hash(person_id, date and time of account opening, previous hash)
+Entity_id's are updated randomly and multiple times per year. HBank maintains a list of entity_ids for each Person.
+
+
 TODO: Translate this into the code.
 */
 #[derive(Debug)]
 struct Person {
     name: String,
-    entity_id: String,
+    person_id: String,
     hla_profile: Option<String>,
     blood_type: Option<String>,
 }
 
 impl Person {
-    pub fn new(name: String, entity_id: u64) -> Self {
+    pub fn new(name: String, person_id: u64) -> Self {
         Person {
             name,
-            entity_id,
+            person_id,
             hla_profile: None,
             blood_type: None,
         }

@@ -4,7 +4,7 @@ use std::fmt::Debug;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// DEFINE THE 8 ROLES (STRUCTS).
+// DEFINE THE 9 ROLES (STRUCTS).
 #[derive(Clone, Debug)]
 pub struct HBank{
     pub name: String,
@@ -59,6 +59,12 @@ pub struct Donor{
     pub entity_id: String,
     // Add more attributes as needed
 }
+#[derive(Clone, Debug)]
+pub struct Advertiser{
+    pub name: String,
+    pub entity_id: String,
+    // Add more attributes as needed
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -82,7 +88,7 @@ pub trait IsConsultant: Party + Debug {}
 pub trait IsGenerator: Party + Debug {}
 pub trait IsFunder: Party + Debug {}
 pub trait IsDonor: Party + Debug {} 
-
+pub trait IsAdvertiser: Party + Debug {} 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -152,6 +158,14 @@ impl Party for Donor {
         &self.entity_id
     }
 }
+impl Party for Advertiser {
+    fn get_name(&self) -> &str {
+        &self.name
+    }
+    fn get_entity_id(&self) -> &str {
+        &self.entity_id
+    }
+}
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -172,6 +186,7 @@ impl IsFunder for Funder {}
 impl IsDonor for Donor {}
 impl IsConsultant for DataConsultant {}
 impl IsGenerator for DataGenerator {}
+impl IsAdvertiser for Advertiser {}
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -214,7 +229,7 @@ impl PartialEq for &Box<dyn IsGenerator> {
         self.as_ref().get_entity_id() == other.as_ref().get_entity_id()
     }
 }
-impl PartialEq for &Box<dyn IsDonor> {
+impl PartialEq for &Box<dyn IsConsultant> {
     fn eq(&self, other: &Self) -> bool {
         // Dereference the boxes to access the underlying data
         // and compare based on their names or other properties.
@@ -228,7 +243,14 @@ impl PartialEq for &Box<dyn IsFunder> {
         self.as_ref().get_entity_id() == other.as_ref().get_entity_id()
     }
 }
-impl PartialEq for &Box<dyn IsConsultant> {
+impl PartialEq for &Box<dyn IsDonor> {
+    fn eq(&self, other: &Self) -> bool {
+        // Dereference the boxes to access the underlying data
+        // and compare based on their names or other properties.
+        self.as_ref().get_entity_id() == other.as_ref().get_entity_id()
+    }
+}
+impl PartialEq for &Box<dyn IsAdvertiser> {
     fn eq(&self, other: &Self) -> bool {
         // Dereference the boxes to access the underlying data
         // and compare based on their names or other properties.
@@ -255,6 +277,14 @@ impl PartialEq for DonationLegalStructure {
         }
     }
 }
+impl PartialEq for AdLegalStructure {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (&AdLegalStructure::AdvertiserAgreement { .. }, &AdLegalStructure::AdvertiserAgreement { .. }) => true,
+            _ => false,
+        }
+    }
+}
 impl PartialEq for TransactionLegalStructure {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
@@ -265,7 +295,7 @@ impl PartialEq for TransactionLegalStructure {
             (&TransactionLegalStructure::AccessAgreement { .. }, &TransactionLegalStructure::AccessAgreement { .. }) => true,
             (&TransactionLegalStructure::SubscriptionAgreement { .. }, &TransactionLegalStructure::SubscriptionAgreement { .. }) => true,
             (&TransactionLegalStructure::ConsortiumAgreement { .. }, &TransactionLegalStructure::ConsortiumAgreement { .. }) => true,
-            (&TransactionLegalStructure::FundingAgreement { .. }, &TransactionLegalStructure::FundingAgreement { .. }) => true,
+            (&TransactionLegalStructure::ParticipationAgreement { .. }, &TransactionLegalStructure::ParticipationAgreement { .. }) => true,
             (&TransactionLegalStructure::DataExchangeAgreement { .. }, &TransactionLegalStructure::DataExchangeAgreement { .. }) => true,
             _ => false,
         }
@@ -310,7 +340,15 @@ pub enum DonationLegalStructure {
     //Philantropic entity provides donations to HBank.
 
 }
+#[derive(Debug)]
+pub enum AdLegalStructure {
+    AdvertiserAgreement { 
+        advertiser: Box<dyn IsDonor>, 
+        h_bank: Box<dyn IsHBank>, 
+    },
+    //Advertiser entity provides joins the HBroker platform.
 
+}
 #[derive(Debug)]
 pub enum TransactionLegalStructure {
 
@@ -368,13 +406,13 @@ pub enum TransactionLegalStructure {
     },
     // Multiple agents collaborate (typically at least one is a research institution) in a joint research project where access to health data is granted in exchange for funding or resources. Specifies the research objectives, funding arrangements, data sharing protocols, and intellectual property rights related to research outcomes.
 
-    FundingAgreement {
+    ParticipationAgreement {
         agents: Vec<Box<dyn IsAgent>>,
         funders: Vec<Box<dyn IsFunder>>,
         generators: Vec<Box<dyn IsGenerator>>,
         h_bank: Box<dyn IsHBank>,
     },
-    // Research institutions or funding bodies provide grants to the agent in exchange for access to health data for research purposes. Grants may fund specific research projects, with terms related to data access, use, publication rights, and compliance with regulatory requirements.
+    // Covers clinical trials, oberservational studies, etc. May require IRB approval.
 
     DataExchangeAgreement {
         agents_a: Vec<Box<dyn IsAgent>>,
@@ -393,6 +431,7 @@ pub enum TransactionLegalStructure {
 pub enum TwoPartyLegalStructure {
     Storage(StorageLegalStructure),
     Donation(DonationLegalStructure),
+    Advertisement(AdLegalStructure),
 }
 
 // Define the 'ContractCategory' enum with the appropriate constraints
@@ -443,3 +482,9 @@ pub enum IndividualContributionLevel {
     NotApplicable,
     // A DataOriginator must NOT be party to the contract.
 }
+
+
+pub struct PaymentInfo {
+
+}
+
