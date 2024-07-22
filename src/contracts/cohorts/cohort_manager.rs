@@ -5,7 +5,7 @@ use crate::contracts::structs_enums::{ContractCategory, ContractLegalFramework,
     DataCustodian, DataOriginator, DataRecipient, DonationLegalStructure, Donor, Funder, HBank,
     GeneratorRateSpecification, IndividualContributionLevel, 
     IsAgent, IsOriginator, IsRecipient, IsConsultant, IsDonor, IsFunder, IsGenerator, IsHBank, Party, 
-    StorageLegalStructure, TransactionLegalStructure, TwoPartyLegalStructure};
+    StorageExchangeLegalStructure, TransactionLegalStructure, TwoPartyLegalStructure};
 
 
 

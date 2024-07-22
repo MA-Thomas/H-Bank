@@ -7,9 +7,11 @@ use std::error::Error;
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
-use crate::contracts;
-use crate::persons;
-use crate::cohorts;
+// Make available all funtions and data structures from the library modules.
+use h_bank::contracts::health_data_contract::*;  
+use h_bank::contracts::structs_enums::*;
+use h_bank::contracts::persons::individual::*;   
+use h_bank::contracts::cohorts::cohort_manager::*;
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
@@ -59,6 +61,7 @@ fn main() {
     let irb_required = false;
     let irb_approved = None; 
 
+    let contract_id = "165XF9_PO".to_string();
     // The type of cohort_id is Option<String>. This means the ownership of the string contained in the Option<> 
     // will be passed to the contract (rather than borrowed which might introduce lifetime issues).
     let cohort_id = Some("abcdXYZ31415".to_string());
@@ -74,6 +77,7 @@ fn main() {
             individual_contribution_level,
             irb_required,
             irb_approved,
+            contract_id,
             cohort_id,
         );
 
@@ -100,7 +104,7 @@ fn main() {
     // Validate contract before executing.
     contract.validate_and_execute_contract();
     match contract.validate_and_execute_contract() {
-        Ok(_) => println!("Contract execute successfully."),
+        Ok(_) => println!("Contract executed successfully."),
         Err(e) => eprintln!("Error: {}", e),
     }
 

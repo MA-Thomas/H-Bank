@@ -3,7 +3,12 @@ name = "H-Bank"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "h_bank"  # Library crate name 
 
+[[bin]]
+name = "main"
+path = "bin/main.rs"
 
 [dependencies]
 pyo3 = { version = "0.20.0", features = ["extension-module"] } 

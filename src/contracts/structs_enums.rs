@@ -65,7 +65,6 @@ pub struct Advertiser{
     pub entity_id: String,
     // Add more attributes as needed
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -79,7 +78,7 @@ pub trait Party: Any {
 }
 // Make sure that the Party trait is a supertrait of all other relevant traits.
 // These next lines ensure that each specific trait (IsHBank, IsAgent, IsOriginator, IsRecipient, etc.) 
-// inherits from the Party trait, making the name and entity_id method available to them.
+// inherits from the Party trait, making the name and entity_id methods available to them.
 pub trait IsHBank: Party + Debug {}
 pub trait IsAgent: Party + Debug {}
 pub trait IsOriginator: Party + Debug {} 
@@ -93,7 +92,7 @@ pub trait IsAdvertiser: Party + Debug {}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// IMPLEMENT THE PARTY TRAIT FOR ALL 8 ROLES.
+// IMPLEMENT THE PARTY TRAIT FOR ALL 9 ROLES.
 impl Party for HBank {
     fn get_name(&self) -> &str {
         &self.name
@@ -193,7 +192,7 @@ impl IsAdvertiser for Advertiser {}
 ////////////////////////////////////////////////////////////////////////////////////////////
 // NEXT, IMPLEMENT PartialEq FOR ALL OF THE BOXED DYNAMIC TRAIT OBJECTS 
 // SO WE CAN COMPARE TWO OBJECTS. ALSO IMPLEMENT PartialEq FOR AGREEMENT TYPES
-// ( NECESSARY FOR lib_contracts.rs -> HealthDataContract.eq(_,_) ).
+// ( NECESSARY FOR contracts/health_data_contract.rs -> HealthDataContract.eq(_,_) ).
 impl PartialEq for &Box<dyn IsHBank> {
     fn eq(&self, other: &Self) -> bool {
         // Dereference the boxes to access the underlying data
@@ -258,13 +257,13 @@ impl PartialEq for &Box<dyn IsAdvertiser> {
     }
 }
 
-impl PartialEq for StorageLegalStructure {
+impl PartialEq for StorageExchangeLegalStructure {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (&StorageLegalStructure::AgentStorageAgreement { .. }, &StorageLegalStructure::AgentStorageAgreement { .. }) => true,
-            (&StorageLegalStructure::AgentServiceAgreement { .. }, &StorageLegalStructure::AgentServiceAgreement { .. }) => true,
-            (&StorageLegalStructure::GeneratorStorageAgreement { .. }, &StorageLegalStructure::GeneratorStorageAgreement { .. }) => true,
-            (&StorageLegalStructure::GeneratorServiceAgreement { .. }, &StorageLegalStructure::GeneratorServiceAgreement { .. }) => true,
+            (&StorageExchangeLegalStructure::AgentStorageAgreement { .. }, &StorageExchangeLegalStructure::AgentStorageAgreement { .. }) => true,
+            (&StorageExchangeLegalStructure::AgentExchangeAgreement { .. }, &StorageExchangeLegalStructure::AgentExchangeAgreement { .. }) => true,
+            (&StorageExchangeLegalStructure::GeneratorStorageAgreement { .. }, &StorageExchangeLegalStructure::GeneratorStorageAgreement { .. }) => true,
+            (&StorageExchangeLegalStructure::GeneratorExchangeAgreement { .. }, &StorageExchangeLegalStructure::GeneratorExchangeAgreement { .. }) => true,
             _ => false,
         }
     }
@@ -308,27 +307,27 @@ impl PartialEq for TransactionLegalStructure {
 ////////////////////////////////////////////////////////////////////////////////////////////
 // NEXT, DEFINE THE STORAGE AND TRANSACTION LEGAL STRUCTURES.
 #[derive(Debug)]
-pub enum StorageLegalStructure {
+pub enum StorageExchangeLegalStructure {
     AgentStorageAgreement { 
         agent: Box<dyn IsAgent>, 
         h_bank: Box<dyn IsHBank>, 
     },
     //Storage agreement would be used by an agent to store their data.
-    AgentServiceAgreement { 
+    AgentExchangeAgreement { 
         agent: Box<dyn IsAgent>, 
         h_bank: Box<dyn IsHBank>, 
     },
-    //Service agreement would be used when agent seeks to gain access to the HBroker platform.
+    //Exchange agreement would be used when agent seeks to gain access to the HBroker platform.
     GeneratorStorageAgreement { 
         generator: Box<dyn IsGenerator>, 
         h_bank: Box<dyn IsHBank>, 
     },
     //Storage agreement would be used by a data generator (e.g., hospital) to store their data.
-    GeneratorServiceAgreement { 
+    GeneratorExchangeAgreement { 
         generator: Box<dyn IsGenerator>, 
         h_bank: Box<dyn IsHBank>, 
     },
-    //Service agreement would be used when data generator seeks to gain access to the HBroker platform.
+    //Exchange agreement would be used when data generator seeks to gain access to the HBroker platform.
 }
 
 #[derive(Debug)]
@@ -429,7 +428,7 @@ pub enum TransactionLegalStructure {
 // Define an enum to distinguish between Storage and Donation structures
 #[derive(Debug, PartialEq)]
 pub enum TwoPartyLegalStructure {
-    Storage(StorageLegalStructure),
+    Storage_or_Exchange(StorageExchangeLegalStructure),
     Donation(DonationLegalStructure),
     Advertisement(AdLegalStructure),
 }
@@ -451,7 +450,7 @@ pub enum ContractLegalFramework {
 
 /*                                *** SUMMARY ***
 Traits: IsAgent and IsHBank are used to define the roles of agents and HBank.
-Structs: StorageLegalStructure and TransactionLegalStructure include the various agreement types and enforce the type constraints.
+Structs: StorageExchangeLegalStructure and TransactionLegalStructure include the various agreement types and enforce the type constraints.
 Enum: ContractCategory uses generics to enforce that TwoParty contracts involve HBank and one other agent, and ThreePlusParty contracts involve HBank and two other agents.
 */
 

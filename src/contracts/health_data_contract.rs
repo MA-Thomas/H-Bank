@@ -3,7 +3,9 @@ use std::any::{Any, TypeId};
 
 use std::marker::PhantomData;
 
-use crate::contracts::structs_enums::{ContractCategory, ContractLegalFramework, DataCustodian, DataOriginator, DataRecipient, DonationLegalStructure, Donor, Funder, GeneratorRateSpecification, HBank, IndividualContributionLevel, IsAdvertiser, IsAgent, IsConsultant, IsDonor, IsFunder, IsGenerator, IsHBank, IsOriginator, IsRecipient, Party, StorageLegalStructure, TransactionLegalStructure, TwoPartyLegalStructure};
+use crate::contracts::structs_enums::{ContractCategory, ContractLegalFramework, DataCustodian, DataOriginator, DataRecipient, DonationLegalStructure, Donor, Funder, GeneratorRateSpecification, HBank, 
+    IndividualContributionLevel, IsAdvertiser, IsAgent, IsConsultant, IsDonor, IsFunder, IsGenerator, IsHBank, IsOriginator, IsRecipient, Party, 
+    StorageExchangeLegalStructure, TransactionLegalStructure, TwoPartyLegalStructure};
 
 
 // Function to check if a party matches a type (useful for checking if party to be added is compatible with agreement_type)
@@ -33,7 +35,7 @@ O : the data originator (e.g., an individual person)
 H : the HBank
 
 Not all roles need to be present as parties to a contract, but all need to be part of the contract specification.
-For now, cohort_id is the only public field as it is the only field that needs to be used from other modules (i.e., lib_cohorts.rs)
+For now, cohort_id (update: and contract_id) is the only public field as it is the only field that needs to be used from other modules (i.e., cohorts/cohort_manager.rs)
 */
 pub struct HealthDataContract<A, B, C, D, E, F, G, O, H> {
     parties: Vec<Box<dyn Party>>,
@@ -44,6 +46,7 @@ pub struct HealthDataContract<A, B, C, D, E, F, G, O, H> {
     individual_contribution_level: IndividualContributionLevel,
     irb_required: bool,
     irb_approved: Option<bool>,
+    pub contract_id: String,
     pub cohort_id: Option<String>,
     _phantom: PhantomData<(A, B, C, D, E, F, G, O, H)>, // PhantomData to indicate unused type parameters (they will be used later for type checking)
 }
@@ -70,6 +73,7 @@ where
         individual_contribution_level: IndividualContributionLevel,
         irb_required: bool,
         irb_approved: Option<bool>,
+        contract_id: String,
         cohort_id: Option<String>,
     ) -> Self {
 
@@ -84,6 +88,7 @@ where
             irb_required,
             irb_approved,
             cohort_id,
+            contract_id,
             _phantom: PhantomData, // Initialize PhantomData without any value
         }
     }
@@ -96,7 +101,7 @@ where
         match &self.agreement_type {
             ContractCategory::TwoParty(two_party_type) => {
                 match two_party_type {
-                    TwoPartyLegalStructure::Storage(storage_type) => {
+                    TwoPartyLegalStructure::Storage_or_Exchange(storage_type) => {
                         if parties.len() != 2 {
                             panic!("Storage agreement requires exactly 2 parties.");
                         }
@@ -272,7 +277,7 @@ where
     fn determine_whether_parties_have_generator(&self) -> bool {
         self.parties.iter().any(|party| party_is::<G>(&**party))
     }
-    pub fn validate_generator_rate_spec(&self) -> Result<(), ValidationError> {
+    fn validate_generator_rate_spec(&self) -> Result<(), ValidationError> {
         let generator_present = self.determine_whether_parties_have_generator();
 
         match (generator_present, &self.generator_rate) {
@@ -287,7 +292,7 @@ where
     fn determine_whether_parties_have_data_originator(&self) -> bool {
         self.parties.iter().any(|party| party_is::<O>(&**party))
     }
-    pub fn validate_individual_contribution_level(&self) -> Result<(), ValidationError> {
+    fn validate_individual_contribution_level(&self) -> Result<(), ValidationError> {
         let originator_present = self.determine_whether_parties_have_data_originator();
 
         match (originator_present, &self.individual_contribution_level) {
@@ -299,7 +304,7 @@ where
             (true, IndividualContributionLevel::NotApplicable) => Err(ValidationError("At least one party implements IsOriginator, but individual_contribution_level is set to NotApplicable.".to_string())),
         }
     }
-    pub fn validate_irb_requirement(&self) -> Result<(), ValidationError> {
+    fn validate_irb_requirement(&self) -> Result<(), ValidationError> {
         if self.irb_required {
             match self.irb_approved {
                 Some(true) => Ok(()),

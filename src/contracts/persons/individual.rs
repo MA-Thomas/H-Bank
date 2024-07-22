@@ -3,28 +3,28 @@ use regex::Regex;
 
 
 /*
-A Person is linked uniquely to their person_id. For privacy reasons, Persons will not appear 
+An Individual is linked uniquely to their person_id. For privacy reasons, Individuals will not appear 
 in contracts since contracts are made public.
 DataOriginator's appear in contracts and their entity_id derives from (but is not identical to) 
 the person_id of the corresponding person.
 
 Idea: entity_id = hash(person_id, date and time of account opening, previous hash)
-Entity_id's are updated randomly and multiple times per year. HBank maintains a list of entity_ids for each Person.
+Entity_id's are updated randomly and multiple times per year. HBank maintains a list of entity_ids for each Individual.
 
 
 TODO: Translate this into the code.
 */
 #[derive(Debug)]
-struct Person {
+struct Individual {
     name: String,
     person_id: String,
     hla_profile: Option<String>,
     blood_type: Option<String>,
 }
 
-impl Person {
+impl Individual {
     pub fn new(name: String, person_id: String) -> Self {
-        Person {
+        Individual {
             name,
             person_id,
             hla_profile: None,
@@ -58,7 +58,7 @@ impl Person {
 }
 
 // pub fn main() {
-//     let mut person = Person::new("Alice".to_string(), "1");
+//     let mut person = Individual::new("Alice".to_string(), "1");
 
 //     // Example valid alleles
 //     let valid_alleles = vec!["A02:01", "B07:02", "C07:02"];
