@@ -465,9 +465,7 @@ pub enum GeneratorRateSpecification {
     KnowledgeRate(f64),
     // Applies to first transaction of a datum. 
     UsageRate(f64),
-    // Applies to subsequent transactions.
-    NotApplicable,
-    // Applies when no generator is part of the contract.
+    // Applies to subsequent transactions of the datum.
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -475,14 +473,16 @@ pub enum GeneratorRateSpecification {
 #[derive(Debug, PartialEq)]
 pub enum IndividualContributionLevel {
     DataOnly,
-    // Possible for any contract agreement, any party composition.
     DataAndParticipation,
-    // A DataOriginator must be party to the contract.
-    NotApplicable,
-    // A DataOriginator must NOT be party to the contract.
 }
 
-
+#[derive(Debug, PartialEq)]
+pub enum DataPrivacyLevel {
+    HIPPA_minus,
+    // At least one HIPPA identifier determined to be present in contract data
+    HIPPA_deidentified,
+    // 18 HIPPA identifiers determined to be absent from contract data
+}
 pub struct PaymentInfo {
 
 }

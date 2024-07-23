@@ -1,35 +1,41 @@
 use std::collections::HashSet;
 use regex::Regex;
 
+use time::Date;
+
 
 /*
-An Individual is linked uniquely to their person_id. For privacy reasons, Individuals will not appear 
-in contracts since contracts are made public.
-DataOriginator's appear in contracts and their entity_id derives from (but is not identical to) 
-the person_id of the corresponding person.
+An Individual is linked uniquely to their person_id. 
+A Corporation is also linked uniquely to their person_id.
+For privacy reasons, only the fields: person_id and data_of_birth are public as they are used by health_data_contract->validate_age_wrt_agency_privacy().
 
-Idea: entity_id = hash(person_id, date and time of account opening, previous hash)
-Entity_id's are updated randomly and multiple times per year. HBank maintains a list of entity_ids for each Individual.
-
-
-TODO: Translate this into the code.
 */
 #[derive(Debug)]
-struct Individual {
-    name: String,
-    person_id: String,
-    hla_profile: Option<String>,
-    blood_type: Option<String>,
+pub struct Individual {
+    pub name: String,
+    pub person_id: String,
+    pub hla_profile: Option<String>,
+    pub blood_type: Option<String>,
+    pub date_of_birth: Date,
 }
 
+
 impl Individual {
-    pub fn new(name: String, person_id: String) -> Self {
+    pub fn new(name: String, person_id: String, date_of_birth: Date) -> Self {
         Individual {
             name,
             person_id,
             hla_profile: None,
             blood_type: None,
+            date_of_birth,
         }
+    }
+
+    pub fn get_person_id(&self) -> &str {
+        &self.person_id
+    }
+    pub fn get_name(&self) -> &str {
+        &self.name
     }
 
     pub fn add_hla_profile(&mut self, alleles: Vec<&str>) {

@@ -1,11 +1,17 @@
 use std::fmt;
 use std::any::{Any, TypeId};
+use std::collections::HashMap;
+
+use time::OffsetDateTime;
 
 use std::marker::PhantomData;
 
 use crate::contracts::structs_enums::{ContractCategory, ContractLegalFramework, DataCustodian, DataOriginator, DataRecipient, DonationLegalStructure, Donor, Funder, GeneratorRateSpecification, HBank, 
     IndividualContributionLevel, IsAdvertiser, IsAgent, IsConsultant, IsDonor, IsFunder, IsGenerator, IsHBank, IsOriginator, IsRecipient, Party, 
-    StorageExchangeLegalStructure, TransactionLegalStructure, TwoPartyLegalStructure};
+    StorageExchangeLegalStructure, TransactionLegalStructure, TwoPartyLegalStructure, 
+    DataPrivacyLevel};
+
+use crate::persons::*;
 
 
 // Function to check if a party matches a type (useful for checking if party to be added is compatible with agreement_type)
@@ -42,12 +48,15 @@ pub struct HealthDataContract<A, B, C, D, E, F, G, O, H> {
     agreement_type: ContractCategory,
     legal_framework: ContractLegalFramework,
     terms: String,
-    generator_rate: GeneratorRateSpecification,
-    individual_contribution_level: IndividualContributionLevel,
+    generator_rate: Option<GeneratorRateSpecification>,
+    individual_contribution_level: Option<IndividualContributionLevel>,
     irb_required: bool,
     irb_approved: Option<bool>,
     pub contract_id: String,
     pub cohort_id: Option<String>,
+    privacy_level: DataPrivacyLevel,
+    individuals_map: HashMap<String, Individual>,
+    corporations_map: HashMap<String, Corporation>,
     _phantom: PhantomData<(A, B, C, D, E, F, G, O, H)>, // PhantomData to indicate unused type parameters (they will be used later for type checking)
 }
 
@@ -69,12 +78,15 @@ where
         agreement_type: ContractCategory,
         legal_framework: ContractLegalFramework,
         terms: String,
-        generator_rate: GeneratorRateSpecification,
-        individual_contribution_level: IndividualContributionLevel,
+        generator_rate: Option<GeneratorRateSpecification>,
+        individual_contribution_level: Option<IndividualContributionLevel>,
         irb_required: bool,
         irb_approved: Option<bool>,
         contract_id: String,
         cohort_id: Option<String>,
+        privacy_level: DataPrivacyLevel,
+        individuals_map: HashMap<String, Individual>,
+        corporations_map: HashMap<String, Corporation>,
     ) -> Self {
 
         // Assign default value if None
@@ -89,6 +101,9 @@ where
             irb_approved,
             cohort_id,
             contract_id,
+            privacy_level,
+            individuals_map,
+            corporations_map,
             _phantom: PhantomData, // Initialize PhantomData without any value
         }
     }
@@ -279,12 +294,12 @@ where
     }
     fn validate_generator_rate_spec(&self) -> Result<(), ValidationError> {
         let generator_present = self.determine_whether_parties_have_generator();
-
+    
         match (generator_present, &self.generator_rate) {
-            (false, GeneratorRateSpecification::NotApplicable) => Ok(()),
-            (false, _) => Err(ValidationError("No parties implement IsGenerator, but generator_rate is not set to NotApplicable.".into())),
-            (true, GeneratorRateSpecification::NotApplicable) => Err(ValidationError("At least one party implements IsGenerator, but generator_rate is set to NotApplicable.".into())),
-            (true, _) => Ok(()),
+            (false, None) => Ok(()),
+            (false, Some(_)) => Err(ValidationError("No parties implement IsGenerator, but generator_rate is specified.".into())),
+            (true, None) => Err(ValidationError("At least one party implements IsGenerator, but generator_rate is not specified.".into())),
+            (true, Some(_)) => Ok(()),
         }
     }
 
@@ -294,16 +309,18 @@ where
     }
     fn validate_individual_contribution_level(&self) -> Result<(), ValidationError> {
         let originator_present = self.determine_whether_parties_have_data_originator();
-
+    
         match (originator_present, &self.individual_contribution_level) {
-            (false, IndividualContributionLevel::NotApplicable) => Ok(()),
-            (false, IndividualContributionLevel::DataOnly) => Ok(()),
-            (false, IndividualContributionLevel::DataAndParticipation) => Err(ValidationError("No parties implement IsOriginator, but individual_contribution_level is set to DataAndParticipation.".to_string())),
-            (true, IndividualContributionLevel::DataOnly) => Ok(()),
-            (true, IndividualContributionLevel::DataAndParticipation) => Ok(()),
-            (true, IndividualContributionLevel::NotApplicable) => Err(ValidationError("At least one party implements IsOriginator, but individual_contribution_level is set to NotApplicable.".to_string())),
+            (false, None) => Ok(()),
+            (false, Some(IndividualContributionLevel::DataOnly)) => Ok(()),
+            (false, Some(IndividualContributionLevel::DataAndParticipation)) => Err(ValidationError("No parties implement IsOriginator, but individual_contribution_level is set to DataAndParticipation.".to_string())),
+            (true, None) => Err(ValidationError("At least one party implements IsOriginator, but individual_contribution_level is not specified.".to_string())),
+            (true, Some(IndividualContributionLevel::DataOnly)) => Ok(()),
+            (true, Some(IndividualContributionLevel::DataAndParticipation)) => Ok(()),
         }
     }
+
+    // Method to validate IRB if required.
     fn validate_irb_requirement(&self) -> Result<(), ValidationError> {
         if self.irb_required {
             match self.irb_approved {
@@ -314,6 +331,30 @@ where
         } else {
             Ok(())
         }
+    }
+
+    // Method to verify each party's age related agency and privacy checks.
+    pub fn validate_individual_age_wrt_agency_privacy(&self) -> Result<(), ValidationError> {
+        let current_date = OffsetDateTime::now_utc().date();
+    
+        for party in &self.parties {
+            let person_id = party.get_entity_id();
+            
+            if party_is::<DataOriginator>(&**party) || party_is::<DataCustodian>(&**party) {
+                if let Some(individual) = self.individuals_map.get(person_id) {
+                    let birth_date = individual.date_of_birth;
+                    let age = current_date.year() - birth_date.year() -
+                              if current_date.ordinal() < birth_date.ordinal() { 1 } else { 0 };
+                    if age < 17 {
+                        return Err(ValidationError(format!("Individual with ID {} is under 17 years old.", person_id)));
+                    }
+                } else {
+                    return Err(ValidationError(format!("Person ID {} not found in individuals_map.", person_id)));
+                }
+            }
+        }
+        
+        Ok(())
     }
 
 
@@ -331,6 +372,10 @@ where
         }
         match self.validate_irb_requirement() {
             Ok(_) => println!("IRB requirement is satisfied."),
+            Err(e) => eprintln!("Error: {}", e),
+        }
+        match self.validate_individual_age_wrt_agency_privacy() {
+            Ok(_) => println!("age related privacy requirements are satisfied."),
             Err(e) => eprintln!("Error: {}", e),
         }
         Ok(())
@@ -356,6 +401,7 @@ impl<A, B, C, D, E, F, G, O, H> PartialEq for HealthDataContract<A, B, C, D, E, 
             && self.generator_rate == other.generator_rate
             && self.individual_contribution_level == other.individual_contribution_level
             && self.cohort_id == other.cohort_id
+            && self.privacy_level == other.privacy_level
     }
 }
 
