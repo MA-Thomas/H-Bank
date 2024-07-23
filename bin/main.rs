@@ -137,6 +137,7 @@ fn main() {
     let generator_party: Box<dyn Party> = Box::new(DataGenerator { name: generator.get_name().to_string(), entity_id: generator.get_person_id().to_string() });
     let hbank_party: Box<dyn Party> = Box::new(HBank { name: hbank.get_name().to_string(), entity_id: hbank.get_person_id().to_string() });
     
+    
     let parties_to_add: Vec<Box<dyn Party>> = vec![
         custodian_party,
         recipient_party,
