@@ -130,6 +130,7 @@ fn main() {
     let cohort_id = Some("abcdXYZ31415".to_string());
     let privacy_level = DataPrivacyLevel::HIPPA_deidentified; 
 
+    
     // Define parties to add as Boxed references to dynamic trait objects
     let originator_party: Box<dyn Party> = Box::new(DataOriginator { name: originator.get_name().to_string(), entity_id: originator.get_person_id().to_string() });
     let custodian_party: Box<dyn Party> = Box::new(DataCustodian { name: custodian.get_name().to_string(), entity_id: custodian.get_person_id().to_string() });
@@ -137,7 +138,7 @@ fn main() {
     let generator_party: Box<dyn Party> = Box::new(DataGenerator { name: generator.get_name().to_string(), entity_id: generator.get_person_id().to_string() });
     let hbank_party: Box<dyn Party> = Box::new(HBank { name: hbank.get_name().to_string(), entity_id: hbank.get_person_id().to_string() });
     
-    
+
     let parties_to_add: Vec<Box<dyn Party>> = vec![
         custodian_party,
         recipient_party,
