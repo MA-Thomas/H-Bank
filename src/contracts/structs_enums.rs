@@ -487,3 +487,23 @@ pub struct PaymentInfo {
 
 }
 
+pub struct Terms {
+    pub data_borrowers_full_list: Option<Vec<String>>,
+    // All personel (within the borrowing corporation) that may access the data.
+
+    pub data_request_explanation: Option<String>,
+    // Full explanation of the request (may change this to PDF or other format later).
+
+    pub data_request_purpose_executive_summary: Option<String>,
+    // One paragraph explanation of why the requested data is necessary (meant to be read by DataOriginator or other Agent providing data).
+}
+impl Default for Terms {
+    fn default() -> Self {
+        Terms {
+            data_borrowers_full_list: None,
+            data_request_explanation: None,
+            data_request_purpose_executive_summary: None,
+        }
+    }
+}
+// TODO: ADD METHODS FOR MODIFYING TERMS

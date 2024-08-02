@@ -9,7 +9,7 @@ use std::marker::PhantomData;
 use crate::contracts::structs_enums::{ContractCategory, ContractLegalFramework, DataCustodian, DataOriginator, DataRecipient, DonationLegalStructure, Donor, Funder, GeneratorRateSpecification, HBank, 
     IndividualContributionLevel, IsAdvertiser, IsAgent, IsConsultant, IsDonor, IsFunder, IsGenerator, IsHBank, IsOriginator, IsRecipient, Party, 
     StorageExchangeLegalStructure, TransactionLegalStructure, TwoPartyLegalStructure, 
-    DataPrivacyLevel};
+    DataPrivacyLevel, Terms};
 
 use crate::persons::*;
 
@@ -47,7 +47,7 @@ pub struct HealthDataContract<A, B, C, D, E, F, G, O, H> {
     parties: Vec<Box<dyn Party>>,
     agreement_type: ContractCategory,
     legal_framework: ContractLegalFramework,
-    terms: String,
+    terms: Terms,
     generator_rate: Option<GeneratorRateSpecification>,
     individual_contribution_level: Option<IndividualContributionLevel>,
     irb_required: bool,
@@ -77,7 +77,7 @@ where
         parties: Vec<Box<dyn Party>>,
         agreement_type: ContractCategory,
         legal_framework: ContractLegalFramework,
-        terms: String,
+        terms: Terms,
         generator_rate: Option<GeneratorRateSpecification>,
         individual_contribution_level: Option<IndividualContributionLevel>,
         irb_required: bool,
@@ -108,9 +108,7 @@ where
         }
     }
 
-    pub fn add_terms(&mut self, terms: &str) {
-        self.terms.push_str(terms);
-    }
+
 
     pub fn add_parties(&mut self, parties: Vec<Box<dyn Party>>) {
         match &self.agreement_type {
@@ -397,7 +395,7 @@ impl<A, B, C, D, E, F, G, O, H> PartialEq for HealthDataContract<A, B, C, D, E, 
             && self.parties.iter().zip(&other.parties).all(|(a, b)| party_eq(a, b))
             && self.agreement_type == other.agreement_type
             && self.legal_framework == other.legal_framework
-            && self.terms == other.terms
+            // && self.terms == other.terms
             && self.generator_rate == other.generator_rate
             && self.individual_contribution_level == other.individual_contribution_level
             && self.cohort_id == other.cohort_id

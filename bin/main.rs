@@ -130,7 +130,7 @@ fn main() {
     let cohort_id = Some("abcdXYZ31415".to_string());
     let privacy_level = DataPrivacyLevel::HIPPA_deidentified; 
 
-    
+
     // Define parties to add as Boxed references to dynamic trait objects
     let originator_party: Box<dyn Party> = Box::new(DataOriginator { name: originator.get_name().to_string(), entity_id: originator.get_person_id().to_string() });
     let custodian_party: Box<dyn Party> = Box::new(DataCustodian { name: custodian.get_name().to_string(), entity_id: custodian.get_person_id().to_string() });
@@ -165,13 +165,16 @@ fn main() {
     corporations_map.insert(advertiser.person_id.clone(), advertiser);
     corporations_map.insert(hbank.person_id.clone(), hbank);
 
+    // Create default Terms of the contract
+    let contract_terms = Terms::default();
+
     // Explicitly annotate the type of `contract` to resolve type inference issues
     let mut contract: HealthDataContract<DataCustodian, DataRecipient, DataConsultant, Donor, Advertiser, Funder, DataGenerator, DataOriginator, HBank> =
     HealthDataContract::new(
         vec![],
         contract_category,
         legal_framework,
-        "Sample terms.".to_string(),
+        contract_terms,
         generator_rate_spec,
         individual_contribution_level,
         irb_required,
@@ -185,9 +188,6 @@ fn main() {
 
     // Add parties using the add_parties method
     contract.add_parties(parties_to_add);
-
-    // Adding additional terms to the contract
-    contract.add_terms(" Additional terms: Confidentiality, data security.");
 
     // Validate contract before executing.
     contract.validate_and_execute_contract();
