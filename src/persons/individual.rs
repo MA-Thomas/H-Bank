@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use regex::Regex;
 
 use time::Date;
-
+use crate::contracts::structs_enums::EntityId;
 
 /*
 An Individual is linked uniquely to their person_id. 
@@ -13,7 +13,7 @@ For privacy reasons, only the fields: person_id and data_of_birth are public as 
 #[derive(Debug)]
 pub struct Individual {
     pub name: String,
-    pub person_id: String,
+    pub person_id: EntityId,
     pub hla_profile: Option<String>,
     pub blood_type: Option<String>,
     pub date_of_birth: Date,
@@ -21,7 +21,7 @@ pub struct Individual {
 
 
 impl Individual {
-    pub fn new(name: String, person_id: String, date_of_birth: Date) -> Self {
+    pub fn new(name: String, person_id: EntityId, date_of_birth: Date) -> Self {
         Individual {
             name,
             person_id,
@@ -31,7 +31,7 @@ impl Individual {
         }
     }
 
-    pub fn get_person_id(&self) -> &str {
+    pub fn get_person_id(&self) -> &EntityId {
         &self.person_id
     }
     pub fn get_name(&self) -> &str {
@@ -63,19 +63,4 @@ impl Individual {
     }
 }
 
-// pub fn main() {
-//     let mut person = Individual::new("Alice".to_string(), "1");
 
-//     // Example valid alleles
-//     let valid_alleles = vec!["A02:01", "B07:02", "C07:02"];
-//     person.add_hla_profile(valid_alleles);
-
-//     // Example invalid alleles
-//     let invalid_alleles = vec!["A0201", "B07:02"];
-//     person.add_hla_profile(invalid_alleles);
-
-//     // Example blood type
-//     person.add_blood_type("O+");
-
-//     println!("{:?}", person);
-// }

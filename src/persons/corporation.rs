@@ -3,6 +3,7 @@ use regex::Regex;
 
 use time::Date;
 
+use crate::contracts::structs_enums::EntityId;
 
 /*
 An Corporation is linked uniquely to their person_id. 
@@ -12,14 +13,14 @@ For privacy reasons, only the fields: person_id and data_of_birth are public as 
 #[derive(Debug)]
 pub struct Corporation {
     pub name: String,
-    pub person_id: String,
+    pub person_id: EntityId,
     pub tax_id: Option<String>,
 
 }
 
 
 impl Corporation {
-    pub fn new(name: String, person_id: String) -> Self {
+    pub fn new(name: String, person_id: EntityId) -> Self {
         Corporation {
             name,
             person_id,
@@ -27,7 +28,7 @@ impl Corporation {
         }
     }
 
-    pub fn get_person_id(&self) -> &str {
+    pub fn get_person_id(&self) -> &EntityId {
         &self.person_id
     }
     pub fn get_name(&self) -> &str {

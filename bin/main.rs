@@ -1,184 +1,127 @@
-use std::collections::{HashMap, HashSet};
-use std::fs::{File, remove_file, create_dir_all};
-use std::io::BufReader;
-use std::error::Error;
+use std::collections::HashMap;
+use time::{Date, Month};
 
-use time::{Date, Month, PrimitiveDateTime};
-use std::str::FromStr;
-
-//////////////////////////////////////////////////////////////////////////////////////////
-// Make available all functions and data structures from the library modules.
-use h_bank::contracts::health_data_contract::*;  
-use h_bank::contracts::structs_enums::*;   
-use h_bank::contracts::cohorts::cohort_manager::*;
-use h_bank::persons::{individual::*, Corporation};
-/////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-
-fn parse_dob_yyyy_mm_dd(date_str: &str) -> Result<Date, String> {
-    // Split the date string into components
-    let parts: Vec<&str> = date_str.split('-').collect();
-
-    if parts.len() != 3 {
-        return Err("Invalid date format".to_string());
-    }
-
-    // Parse the components into integers
-    let year = i32::from_str(parts[0]).map_err(|_| "Invalid year")?;
-    let month = u8::from_str(parts[1]).map_err(|_| "Invalid month")?;
-    let day = u8::from_str(parts[2]).map_err(|_| "Invalid day")?;
-
-    // Create a Date object
-    Date::from_calendar_date(year, Month::try_from(month).map_err(|_| "Invalid month")?, day)
-        .map_err(|e| format!("Failed to create date: {}", e))
-}
+use h_bank::contracts::health_data_contract::*;
+use h_bank::contracts::structs_enums::*;
+use h_bank::persons::{Individual, Corporation};
 
 fn main() {
+    // Create individuals
+    let mut individual_originator = Individual::new(
+        "John Doe".to_string(),
+        EntityId("I-O123".to_string()),
+        Date::from_calendar_date(1980, Month::January, 1).unwrap()
+    );
+    individual_originator.add_hla_profile(vec!["A02:01", "B07:02", "C01:02"]);
+    individual_originator.add_blood_type("A+");
 
-    let date_str = "1900-01-01";
-    let dob: Date = match parse_dob_yyyy_mm_dd(date_str) {
-        Ok(date) => date,
-        Err(e) => {
-            eprintln!("Error parsing date: {}", e);
-            return; // Exit the function if there is an error
-        },
-    };
-    
-    // CREATE INSTANCES OF INDIVIDUALS and CORPORATIONS
-    let originator = Individual { 
-        name: "Marcus Thomas".to_string(), 
-        person_id: "3015_AR_>#_2049".to_string(), 
-        date_of_birth: dob,
-        hla_profile: None,
-        blood_type: None,
-    };
-    
-    let custodian = Corporation { 
-        name: "Greenbaum Lab at MSK".to_string(), 
-        person_id: "3015_AR_>#_2077".to_string(),
-        tax_id: Some("12-2345665".to_string()),
-    };
-    
-    let recipient = Corporation { 
-        name: "Recipient Corp.".to_string(), 
-        person_id: "3015_AR_>#_2066".to_string(), 
-        tax_id: Some("12-2345666".to_string()),
-    };
-    
-    let consultant = Corporation { 
-        name: "consulting firm".to_string(), 
-        person_id: "3015_AR_>#_2055".to_string(),
-        tax_id: Some("12-2345667".to_string()),
-    };
-    
-    let generator = Corporation { 
-        name: "The Hospital".to_string(), 
-        person_id: "3015_AR_>#_2044".to_string(), 
-        tax_id: Some("12-2345668".to_string()),
-    };
-    
-    let funder = Individual { 
-        name: "Big Money Foundation".to_string(), 
-        person_id: "3015_AR_>#_2033".to_string(),
-        date_of_birth: dob,
-        hla_profile: None,
-        blood_type: None,
-    };
-    
-    let advertiser = Corporation { 
-        name: "Goog".to_string(), 
-        person_id: "3015_AR_>#_2000".to_string(),
-        tax_id: Some("12-2345669".to_string()),
-    };
-    
-    let donor = Individual { 
-        name: "Mystery Billionaire".to_string(), 
-        person_id: "3015_AR_>#_2022".to_string(),
-        date_of_birth: dob,
-        hla_profile: None,
-        blood_type: None,
-    };
-    
-    let hbank = Corporation { 
-        name: "Reservatory".to_string(), 
-        person_id: "3015_AR_>#_2011".to_string(),
-        tax_id: Some("15-3141500".to_string()),
-    };
+    let mut individual_donor = Individual::new(
+        "Jane Smith".to_string(),
+        EntityId("I-D123".to_string()),
+        Date::from_calendar_date(1985, Month::May, 15).unwrap()
+    );
+    individual_donor.add_hla_profile(vec!["A01:01", "B08:01", "C07:01"]);
+    individual_donor.add_blood_type("O-");
 
-    /*
-    DETERMINE CONTRACT CATEGORY
-     */
-    let contract_category: ContractCategory =
-        ContractCategory::ThreePlusParty(TransactionLegalStructure::DirectSale {
-            agent_a: Box::new(DataCustodian { name: custodian.get_name().to_string(), entity_id: custodian.get_person_id().to_string() }) as Box<dyn IsAgent>,
-            agent_b: Box::new(DataRecipient { name: recipient.get_name().to_string(), entity_id: recipient.get_person_id().to_string() }) as Box<dyn IsAgent>,
-            generators: vec![
-                Box::new(DataGenerator { name: generator.get_name().to_string(), entity_id: generator.get_person_id().to_string() }) as Box<dyn IsGenerator>,
-                Box::new(DataGenerator { name: generator.get_name().to_string(), entity_id: generator.get_person_id().to_string() }) as Box<dyn IsGenerator>,
-                Box::new(DataGenerator { name: generator.get_name().to_string(), entity_id: generator.get_person_id().to_string() }) as Box<dyn IsGenerator>,
-            ],
-            h_bank: Box::new(HBank { name: hbank.get_name().to_string(), entity_id: hbank.get_person_id().to_string() }) as Box<dyn IsHBank>,
-        });
+    let individual_funder = Individual::new(
+        "Bob Johnson".to_string(),
+        EntityId("I-F123".to_string()),
+        Date::from_calendar_date(1975, Month::December, 10).unwrap()
+    );
 
-    let legal_framework: ContractLegalFramework = ContractLegalFramework::CommonLaw;
+    // Create corporations
+    let mut corp_custodian = Corporation::new(
+        "Data Custodian Inc.".to_string(),
+        EntityId("C-C123".to_string())
+    );
+    corp_custodian.add_tax_id("12-3456789");
 
-    let generator_rate_spec = None; //Some(GeneratorRateSpecification::KnowledgeRate(0.1));
-    let individual_contribution_level = None; //Some(IndividualContributionLevel::DataAndParticipation);
-    let irb_required = false;
-    let irb_approved = None; 
-    let contract_id = "165XF9_PO".to_string();
-    let cohort_id = Some("abcdXYZ31415".to_string());
-    let privacy_level = DataPrivacyLevel::HIPPA_deidentified; 
+    let mut corp_recipient = Corporation::new(
+        "Data Recipient Corp.".to_string(),
+        EntityId("C-R123".to_string())
+    );
+    corp_recipient.add_tax_id("98-7654321");
 
+    let corp_consultant = Corporation::new(
+        "Consultant LLC".to_string(),
+        EntityId("C-CO123".to_string())
+    );
 
-    // Define parties to add as Boxed references to dynamic trait objects
-    let originator_party: Box<dyn Party> = Box::new(DataOriginator { name: originator.get_name().to_string(), entity_id: originator.get_person_id().to_string() });
-    let custodian_party: Box<dyn Party> = Box::new(DataCustodian { name: custodian.get_name().to_string(), entity_id: custodian.get_person_id().to_string() });
-    let recipient_party: Box<dyn Party> = Box::new(DataRecipient { name: recipient.get_name().to_string(), entity_id: recipient.get_person_id().to_string() });
-    let generator_party: Box<dyn Party> = Box::new(DataGenerator { name: generator.get_name().to_string(), entity_id: generator.get_person_id().to_string() });
-    let hbank_party: Box<dyn Party> = Box::new(HBank { name: hbank.get_name().to_string(), entity_id: hbank.get_person_id().to_string() });
-    
+    let corp_generator = Corporation::new(
+        "Data Generator Co.".to_string(),
+        EntityId("C-G123".to_string())
+    );
 
-    let parties_to_add: Vec<Box<dyn Party>> = vec![
-        custodian_party,
-        recipient_party,
-        generator_party,
-        hbank_party,
+    let corp_advertiser = Corporation::new(
+        "Ad Agency Inc.".to_string(),
+        EntityId("C-A123".to_string())
+    );
+
+    let corp_hbank = Corporation::new(
+        "Health Bank".to_string(),
+        EntityId("C-HB123".to_string())
+    );
+
+    // Create contract parties
+    let originator = Party::DataOriginator(PartyInfo { name: individual_originator.get_name().to_string(), entity_id: individual_originator.get_person_id().clone() });
+    let donor = Party::Donor(PartyInfo { name: individual_donor.get_name().to_string(), entity_id: individual_donor.get_person_id().clone() });
+    let funder = Party::Funder(PartyInfo { name: individual_funder.get_name().to_string(), entity_id: individual_funder.get_person_id().clone() });
+    let custodian = Party::DataCustodian(PartyInfo { name: corp_custodian.get_name().to_string(), entity_id: corp_custodian.get_person_id().clone() });
+    let recipient = Party::DataRecipient(PartyInfo { name: corp_recipient.get_name().to_string(), entity_id: corp_recipient.get_person_id().clone() });
+    let consultant = Party::DataConsultant(PartyInfo { name: corp_consultant.get_name().to_string(), entity_id: corp_consultant.get_person_id().clone() });
+    let generator = Party::DataGenerator(PartyInfo { name: corp_generator.get_name().to_string(), entity_id: corp_generator.get_person_id().clone() });
+    let advertiser = Party::Advertiser(PartyInfo { name: corp_advertiser.get_name().to_string(), entity_id: corp_advertiser.get_person_id().clone() });
+    let hbank = Party::HBank(PartyInfo { name: corp_hbank.get_name().to_string(), entity_id: corp_hbank.get_person_id().clone() });
+
+    // Define contract details
+    let contract_category = ContractCategory::TwoParty(TwoPartyLegalStructure::Storage_or_Exchange(
+        StorageExchangeLegalStructure::AgentStorageAgreement { 
+            agent: custodian.clone(), 
+            h_bank: hbank.clone() 
+        }
+    ));
+    let legal_framework = ContractLegalFramework::CommonLaw;
+    let generator_rate_spec = GeneratorRateSpecification::KnowledgeRate(0.05);
+    let individual_contribution_level = IndividualContributionLevel::DataOnly;
+    let contract_id = "C-001".to_string();
+    let cohort_id = Some("CH-001".to_string());
+    let privacy_level = DataPrivacyLevel::HIPPA_deidentified;
+
+    // let parties_to_add = vec![
+    //     originator.clone(), donor.clone(), funder.clone(), custodian.clone(),
+    //     recipient.clone(), consultant.clone(), generator.clone(), advertiser.clone(), hbank.clone(),
+    // ];
+    let parties_to_add = vec![
+        originator.clone(), hbank.clone(),
     ];
 
-    /*
-    Now it is ok to use (move, rather than borrow) the Individuals and Corporations
-    by placing them in a Hashmap and sending them to HealthDataContract::new().
-     */
-    // Create a HashMap from person_id to Individual.
-    let mut individuals_map: HashMap<String, Individual> = HashMap::new();
-    individuals_map.insert(originator.person_id.clone(), originator);
-    individuals_map.insert(donor.person_id.clone(), donor);
-    individuals_map.insert(funder.person_id.clone(), funder);
+    // Create HashMaps for individuals and corporations
+    let mut individuals_map: HashMap<EntityId, Individual> = HashMap::new();
+    individuals_map.insert(individual_originator.get_person_id().clone(), individual_originator);
+    individuals_map.insert(individual_donor.get_person_id().clone(), individual_donor);
+    individuals_map.insert(individual_funder.get_person_id().clone(), individual_funder);
 
-    // Create a HashMap from person_id to Corporation. 
-    let mut corporations_map: HashMap<String, Corporation> = HashMap::new();
-    corporations_map.insert(custodian.person_id.clone(), custodian);
-    corporations_map.insert(recipient.person_id.clone(), recipient);
-    corporations_map.insert(consultant.person_id.clone(), consultant);
-    corporations_map.insert(generator.person_id.clone(), generator);
-    corporations_map.insert(advertiser.person_id.clone(), advertiser);
-    corporations_map.insert(hbank.person_id.clone(), hbank);
+    let mut corporations_map: HashMap<EntityId, Corporation> = HashMap::new();
+    corporations_map.insert(corp_custodian.get_person_id().clone(), corp_custodian);
+    corporations_map.insert(corp_recipient.get_person_id().clone(), corp_recipient);
+    corporations_map.insert(corp_consultant.get_person_id().clone(), corp_consultant);
+    corporations_map.insert(corp_generator.get_person_id().clone(), corp_generator);
+    corporations_map.insert(corp_advertiser.get_person_id().clone(), corp_advertiser);
+    corporations_map.insert(corp_hbank.get_person_id().clone(), corp_hbank);
 
     // Create default Terms of the contract
     let contract_terms = Terms::default();
 
-    // Explicitly annotate the type of `contract` to resolve type inference issues
-    let mut contract: HealthDataContract<DataCustodian, DataRecipient, DataConsultant, Donor, Advertiser, Funder, DataGenerator, DataOriginator, HBank> =
-    HealthDataContract::new(
+    // Create the contract
+    let mut contract = HealthDataContract::new(
         vec![],
         contract_category,
         legal_framework,
         contract_terms,
-        generator_rate_spec,
-        individual_contribution_level,
-        irb_required,
-        irb_approved,
+        None, //Some(generator_rate_spec),
+        Some(individual_contribution_level),
+        true,
+        Some(true),
         contract_id,
         cohort_id,
         privacy_level,
@@ -186,15 +129,16 @@ fn main() {
         corporations_map,
     );
 
-    // Add parties using the add_parties method
-    contract.add_parties(parties_to_add);
-
-    // Validate contract before executing.
-    contract.validate_and_execute_contract();
-    match contract.validate_and_execute_contract() {
-        Ok(_) => println!("Contract executed successfully."),
-        Err(e) => eprintln!("Error: {}", e),
+    // Add parties
+    if let Err(e) = contract.add_parties(parties_to_add) {
+        eprintln!("Error adding parties: {}", e);
+        return;
     }
 
-    // Execute contract ...
+    // Validate and execute contract
+    if let Err(e) = contract.validate_and_execute_contract() {
+        eprintln!("Contract validation failed: {}", e);
+    } else {
+        println!("Contract validated and executed successfully.");
+    }
 }
