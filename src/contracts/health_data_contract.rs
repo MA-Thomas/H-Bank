@@ -33,6 +33,27 @@ pub struct HealthDataContract {
 }
 
 impl HealthDataContract {
+    ///////////////////////////////////////////////////////
+    //           Implement getter methods
+    pub fn get_parties(&self) -> &Vec<Party> {
+        &self.parties
+    }
+
+    pub fn get_privacy_level(&self) -> &DataPrivacyLevel {
+        &self.privacy_level
+    }
+
+    pub fn get_contract_id(&self) -> &str {
+        &self.contract_id
+    }
+
+    pub fn get_cohort_id(&self) -> Option<&str> {
+        self.cohort_id.as_deref()
+    }
+    ///////////////////////////////////////////////////////
+    
+
+
     pub fn new(
         parties: Vec<Party>,
         agreement_type: ContractCategory,

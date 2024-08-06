@@ -1,66 +1,96 @@
-use std::collections::HashMap;
+use std::collections::{HashMap,HashSet};
+use crate::contracts::health_data_contract::HealthDataContract;
+use crate::contracts::structs_enums::{EntityId, DataPrivacyLevel, Party};
 
-use crate::contracts::health_data_contract::{HealthDataContract};
-use crate::contracts::structs_enums::*;
+pub struct CohortManager {
+    cohorts: HashMap<String, Cohort>,
+}
 
-// /*
-// A cohort is a set of individuals (and their contracts) associated with a single borrower.
-// */
-// pub struct CohortManager<A, B, C, D, E, F, G, O, H> {
-//     cohorts: HashMap<String, Vec<HealthDataContract<A, B, C, D, E, F, G, O, H>>>,  // Map from cohort_id to contracts
-// }
+pub struct Cohort {
+    cohort_id: String,
+    contracts: Vec<HealthDataContract>,
+    privacy_level: DataPrivacyLevel,
+    total_participants: usize,
+}
 
-// impl<A, B, C, D, E, F, G, O, H> CohortManager<A, B, C, D, E, F, G, O, H>
-// where 
-//     A: IsAgent + Party + 'static,
-//     B: IsAgent + IsRecipient + Party + 'static,
-//     C: IsConsultant + Party + 'static,
-//     D: IsDonor + Party + 'static,
-//     F: IsFunder + Party + 'static,
-//     G: IsGenerator + Party + 'static,
-//     O: IsAgent + IsOriginator + Party + 'static,
-//     H: IsHBank + Party + 'static,
-// {
-//     // Constructor
-//     pub fn new() -> Self {
-//         CohortManager {
-//             cohorts: HashMap::new(),
-//         }
-//     }
+impl CohortManager {
+    pub fn new() -> Self {
+        CohortManager {
+            cohorts: HashMap::new(),
+        }
+    }
 
-//     // Method to add a contract to a cohort
-//     pub fn add_contract_to_cohort(&mut self, cohort_id: String, mut contract: HealthDataContract<A, B, C, D, E, F, G, O, H>) -> Result<(), String> {
-//         if let Some(contract_cohort_id) = &contract.cohort_id {
-//             if contract_cohort_id != &cohort_id {
-//                 return Err(format!("Contract cohort_id {:?} does not match the provided cohort_id {}", contract_cohort_id, cohort_id));
-//             }
-//         } else {
-//             contract.cohort_id = Some(cohort_id.clone());
-//         }
+    pub fn create_cohort(&mut self, cohort_id: String, privacy_level: DataPrivacyLevel) -> Result<(), String> {
+        if self.cohorts.contains_key(&cohort_id) {
+            return Err(format!("Cohort with ID {} already exists", cohort_id));
+        }
 
-//         self.cohorts.entry(cohort_id).or_insert_with(Vec::new).push(contract);
-//         Ok(())
-//     }
+        let new_cohort = Cohort {
+            cohort_id: cohort_id.clone(),
+            contracts: Vec::new(),
+            privacy_level,
+            total_participants: 0,
+        };
 
-//     // Method to get contracts by cohort ID
-//     pub fn get_contracts_by_cohort(&self, cohort_id: &str) -> Option<&Vec<HealthDataContract<A, B, C, D, E, F, G, O, H>>> {
-//         self.cohorts.get(cohort_id)
-//     }
+        self.cohorts.insert(cohort_id, new_cohort);
+        Ok(())
+    }
 
-//     // Method to remove a cohort
-//     pub fn remove_cohort(&mut self, cohort_id: &str) -> Option<Vec<HealthDataContract<A, B, C, D, E, F, G, O, H>>> {
-//         self.cohorts.remove(cohort_id)
-//     }
+    pub fn add_contract_to_cohort(&mut self, cohort_id: &str, contract: HealthDataContract) -> Result<(), String> {
+        let cohort = self.cohorts.get_mut(cohort_id).ok_or_else(|| format!("Cohort with ID {} not found", cohort_id))?;
 
-//     // Method to set cohort_id of a contract to None
-//     pub fn set_cohort_id_to_none(&mut self, contract: &mut HealthDataContract<A, B, C, D, E, F, G, O, H>) {
-//         if let Some(cohort_id) = &contract.cohort_id {
-//             if let Some(contracts) = self.cohorts.get_mut(cohort_id) {
-//                 if let Some(pos) = contracts.iter().position(|c| c == contract) {
-//                     contracts.remove(pos);
-//                 }
-//             }
-//             contract.cohort_id = None;
-//         }
-//     }
-// }
+        if cohort.privacy_level != *contract.get_privacy_level() {
+            return Err("Contract privacy level does not match cohort privacy level".to_string());
+        }
+
+        cohort.contracts.push(contract);
+        cohort.update_total_participants();
+        Ok(())
+    }
+
+    pub fn remove_contract_from_cohort(&mut self, cohort_id: &str, contract_id: &str) -> Result<(), String> {
+        let cohort = self.cohorts.get_mut(cohort_id).ok_or_else(|| format!("Cohort with ID {} not found", cohort_id))?;
+
+        let contract_index = cohort.contracts.iter().position(|c| c.get_contract_id() == contract_id)
+            .ok_or_else(|| format!("Contract with ID {} not found in cohort {}", contract_id, cohort_id))?;
+
+        cohort.contracts.remove(contract_index);
+        cohort.update_total_participants();
+        Ok(())
+    }
+
+    pub fn get_cohort_summary(&self, cohort_id: &str) -> Result<CohortSummary, String> {
+        let cohort = self.cohorts.get(cohort_id).ok_or_else(|| format!("Cohort with ID {} not found", cohort_id))?;
+
+        Ok(CohortSummary {
+            cohort_id: cohort.cohort_id.clone(),
+            privacy_level: cohort.privacy_level.clone(),
+            total_participants: cohort.total_participants,
+            contract_count: cohort.contracts.len(),
+        })
+    }
+
+    pub fn list_cohorts(&self) -> Vec<String> {
+        self.cohorts.keys().cloned().collect()
+    }
+}
+
+impl Cohort {
+    fn update_total_participants(&mut self) {
+        self.total_participants = self.contracts.iter()
+            .flat_map(|contract| contract.get_parties().iter())
+            .filter(|party| matches!(party, Party::DataOriginator(_)))
+            .map(|party| match party {
+                Party::DataOriginator(info) => &info.entity_id,
+                _ => unreachable!(),
+            })
+            .collect::<HashSet<&EntityId>>()
+            .len();
+    }
+}
+pub struct CohortSummary {
+    pub cohort_id: String,
+    pub privacy_level: DataPrivacyLevel,
+    pub total_participants: usize,
+    pub contract_count: usize,
+}
