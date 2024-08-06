@@ -1,4 +1,4 @@
-(claude summary)
+(summary)
 This revised public_api.rs provides the following key features:
 
 Analysis Submission: Allows data recipients to submit analysis requests, including code repository URL and environment specifications.
