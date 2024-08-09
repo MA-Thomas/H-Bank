@@ -112,6 +112,13 @@ fn main() {
     // Create default Terms of the contract
     let contract_terms = Terms::default();
 
+    let residual_payees = Residuals {
+        Beneficiaries: vec![
+            originator.clone(),
+        ],
+        DisbursementSchedule: "Annually".to_string(),
+    };
+
     // Create the contract
     let mut contract = HealthDataContract::new(
         vec![],
@@ -119,6 +126,7 @@ fn main() {
         legal_framework,
         contract_terms,
         None, //Some(generator_rate_spec),
+        Some(residual_payees),
         Some(individual_contribution_level),
         true,
         Some(true),

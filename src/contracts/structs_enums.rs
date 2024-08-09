@@ -105,6 +105,7 @@ pub enum TwoPartyLegalStructure {
     Advertisement(AdLegalStructure),
 }
 
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum ContractCategory {
     TwoParty(TwoPartyLegalStructure),
@@ -142,3 +143,15 @@ pub struct Terms {
     pub data_request_purpose_executive_summary: Option<String>,
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct Residuals {
+    // Residuals are a form of post-contract compensation, typically paid to HBank by the data borrower and dispersed to the beneficiary.
+    /*
+    Typically, residuals are paid when a work (such as a performance or content) is reused or continues to generate revenue after the original contract has ended. 
+    E.g., an LLM would continue to use the data even after the initial contract period because it effectively memorizes the data, thus justifying ongoing payments 
+    to the data originators.
+    Details on residual payments are to be described in the contract Terms.
+     */
+    pub Beneficiaries: Vec<Party>,
+    pub DisbursementSchedule: String,
+}

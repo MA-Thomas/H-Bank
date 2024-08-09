@@ -22,6 +22,7 @@ pub struct HealthDataContract {
     legal_framework: ContractLegalFramework,
     terms: Terms,
     generator_rate: Option<GeneratorRateSpecification>,
+    residual_payments: Option<Residuals>,
     individual_contribution_level: Option<IndividualContributionLevel>,
     irb_required: bool,
     irb_approved: Option<bool>,
@@ -60,6 +61,7 @@ impl HealthDataContract {
         legal_framework: ContractLegalFramework,
         terms: Terms,
         generator_rate: Option<GeneratorRateSpecification>,
+        residual_payments: Option<Residuals>,
         individual_contribution_level: Option<IndividualContributionLevel>,
         irb_required: bool,
         irb_approved: Option<bool>,
@@ -75,6 +77,7 @@ impl HealthDataContract {
             legal_framework,
             terms,
             generator_rate,
+            residual_payments,
             individual_contribution_level,
             irb_required,
             irb_approved,
@@ -248,12 +251,27 @@ impl HealthDataContract {
         Ok(())
     }
 
+    fn validate_residual_payees(&self) -> Result<(), ValidationError> {
+        if let Some(residuals) = &self.residual_payments {
+            for beneficiary in &residuals.Beneficiaries {
+                if !self.parties.iter().any(|party| party == beneficiary) {
+                    return Err(ValidationError(format!(
+                        "Beneficiary {:?} is not a party to the contract.",
+                        beneficiary
+                    )));
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub fn validate_and_execute_contract(&self) -> Result<(), ValidationError> {
         self.validate_generator_rate_spec()?;
         self.validate_individual_contribution_level()?;
         self.validate_irb_requirement()?;
         self.validate_individual_age_wrt_agency_privacy()?;
-        
+        self.validate_residual_payees()?;
+
         // Here you would add the actual execution logic
         println!("Contract validated successfully. Ready for execution.");
         
