@@ -9,7 +9,6 @@ use super::{
     models::{AnalysisRequest, JobStatus, AppState},  
 };
 
-use crate::models::{AnalysisRequest, JobStatus, AppState};
 
 pub async fn submit_analysis(
     data: web::Json<AnalysisRequest>,
@@ -42,7 +41,7 @@ pub async fn get_job_status(
     state: web::Data<AppState>,
 ) -> impl Responder {
     let jobs = state.jobs.lock().unwrap();
-    match jobs.get(&job_id) {
+    match jobs.get(&job_id.to_string()) {
         Some(status) => HttpResponse::Ok().json(status),
         None => HttpResponse::NotFound().json("Job not found"),
     }
@@ -53,7 +52,7 @@ pub async fn get_result(
     state: web::Data<AppState>,
 ) -> impl Responder {
     let jobs = state.jobs.lock().unwrap();
-    match jobs.get(&job_id) {
+    match jobs.get(&job_id.to_string()) {
         Some(status) if status.status == "Completed" => {
             match state.result_processor.get_processed_result(&job_id) {
                 Ok(result) => HttpResponse::Ok().json(result),
