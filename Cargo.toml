@@ -29,3 +29,5 @@ time = "0.3.36"
 
 actix-web = "4.8.0"
 uuid = { version = "1.10.0", features = ["v4"] }
+
+async-trait = "0.1.68"

@@ -2,13 +2,12 @@ use actix_web::{web, HttpResponse, Responder};
 use uuid::Uuid;
 
 use super::{
-    data_manager::DataManager,
+    data_manager::{DataManager,DataManagerTrait},
     execution_engine::ExecutionEngine,
     archive_system::ArchiveSystem,
     result_processor::ResultProcessor,
     models::{AnalysisRequest, JobStatus, AppState},  
 };
-
 
 pub async fn submit_analysis(
     data: web::Json<AnalysisRequest>,
@@ -20,7 +19,9 @@ pub async fn submit_analysis(
         return HttpResponse::InternalServerError().json(format!("Failed to archive submission: {}", e));
     }
 
-    if let Err(e) = state.data_manager.prepare_data(&data.cohort_id, &data.data_type).await {
+    // Clone the DataManager before calling the async method
+    let data_manager = state.data_manager.clone();
+    if let Err(e) = data_manager.prepare_data(&data.cohort_id, &data.data_type).await {
         return HttpResponse::InternalServerError().json(format!("Failed to prepare data: {}", e));
     }
 

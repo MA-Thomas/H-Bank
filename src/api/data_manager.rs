@@ -8,6 +8,7 @@ pub trait DataManagerTrait: Send + Sync {
     async fn prepare_data(&self, cohort_id: &str, data_type: &DataType) -> Result<AnalysisData, Box<dyn Error>>;
 }
 
+#[derive(Clone)]
 pub struct DataManager {
     // Add fields as needed, e.g., database connection
 }
