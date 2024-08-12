@@ -30,7 +30,7 @@ pub struct HealthDataContract {
     pub cohort_id: Option<String>,
     privacy_level: DataPrivacyLevel,
     individuals_map: HashMap<EntityId, Individual>,
-    corporations_map: HashMap<EntityId, Corporation>, // Simplified for this example
+    corporations_map: HashMap<EntityId, Corporation>, 
 }
 
 impl HealthDataContract {

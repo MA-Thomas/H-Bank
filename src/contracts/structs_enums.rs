@@ -145,11 +145,11 @@ pub struct Terms {
 
 #[derive(Debug, Clone, Default)]
 pub struct Residuals {
-    // Residuals are a form of post-contract compensation, typically paid to HBank by the data borrower and dispersed to the beneficiary.
+    // Residuals are a form of post-contract compensation, typically paid by the data borrower to HBank and then dispersed to the beneficiary.
     /*
-    Typically, residuals are paid when a work (such as a performance or content) is reused or continues to generate revenue after the original contract has ended. 
-    E.g., an LLM would continue to use the data even after the initial contract period because it effectively memorizes the data, thus justifying ongoing payments 
-    to the data originators.
+    Residuals are paid when works or outputs are reused or continue to generate revenue after the original contract has ended. 
+    E.g., an LLM would continue to use the borrowed data even after the initial contract period because it effectively memorizes the data. 
+    This justifies ongoing payments to the data providers.
     Details on residual payments are to be described in the contract Terms.
      */
     pub Beneficiaries: Vec<Party>,

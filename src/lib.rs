@@ -5,8 +5,9 @@ Software Architecture Design Philosophy: Modular Monolith (perhaps migrating to 
 */
 pub mod contracts;
 pub mod persons;
+pub mod api;
 
 // re-export public-API modules from here, the top level. This way, other crates can call this
-// as: use h_bank::cohort_api;
-pub use contracts::cohorts::public_api as cohort_api;
+// as: use h_bank::public_api;
+pub use api::public_api as public_api;
 
