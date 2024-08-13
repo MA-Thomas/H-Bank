@@ -6,7 +6,7 @@ use super::{
     execution_engine::ExecutionEngine,
     archive_system::ArchiveSystem,
     result_processor::ResultProcessor,
-    models::{AnalysisRequest, JobStatus, AppState},  
+    shared_models::{AnalysisRequest, JobStatus, AppState},  
 };
 
 pub async fn submit_analysis(

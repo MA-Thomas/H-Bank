@@ -2,7 +2,7 @@ use std::error::Error;
 use std::collections::HashMap;
 use std::sync::RwLock;
 
-use super::models::AnalysisRequest;
+use super::shared_models::AnalysisRequest;
 
 pub struct ArchiveSystem {
     archives: RwLock<HashMap<String, AnalysisRequest>>,

@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::collections::HashMap;
 
-use super::models::AnalysisResult;
+use super::shared_models::AnalysisResult;
 
 pub struct ResultProcessor {
     results: HashMap<String, AnalysisResult>,

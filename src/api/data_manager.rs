@@ -1,39 +1,38 @@
 use async_trait::async_trait;
-use std::error::Error;
-
-use super::models::{DataType, AnalysisData};
+use crate::api::shared_models::{CohortInfo, SyntheticDataSetup};
 
 #[async_trait]
 pub trait DataManagerTrait: Send + Sync {
-    async fn prepare_data(&self, cohort_id: &str, data_type: &DataType) -> Result<AnalysisData, Box<dyn Error>>;
+    async fn get_cohort_info(&self, cohort_id: &str, server_app_id: &str) -> Result<CohortInfo, Box<dyn std::error::Error>>;
+    async fn setup_synthetic_data(&self, setup: &SyntheticDataSetup, server_app_id: &str) -> Result<SyntheticDataSetup, Box<dyn std::error::Error>>;
+    async fn generate_synthetic_data(&self, setup: &SyntheticDataSetup, server_app_id: &str) -> Result<(), Box<dyn std::error::Error>>;
 }
 
-#[derive(Clone)]
 pub struct DataManager {
-    // Add fields as needed, e.g., database connection
-}
-
-impl DataManager {
-    pub fn new() -> Self {
-        DataManager {
-            // Initialize fields
-        }
-    }
+    // Add any necessary fields
 }
 
 #[async_trait]
 impl DataManagerTrait for DataManager {
-    async fn prepare_data(&self, cohort_id: &str, data_type: &DataType) -> Result<AnalysisData, Box<dyn Error>> {
-        // Placeholder implementation
-        match data_type {
-            DataType::Synthetic => {
-                println!("Preparing synthetic data for cohort {}", cohort_id);
-                Ok(AnalysisData::Synthetic("Synthetic data placeholder".to_string()))
-            },
-            DataType::Sensitive => {
-                println!("Preparing sensitive data for cohort {}", cohort_id);
-                Ok(AnalysisData::Sensitive("Sensitive data placeholder".to_string()))
-            },
-        }
+    async fn get_cohort_info(&self, cohort_id: &str, server_app_id: &str) -> Result<CohortInfo, Box<dyn std::error::Error>> {
+        // Implement the logic to retrieve cohort info
+        // This is a placeholder implementation
+        Ok(CohortInfo {
+            cohort_id: cohort_id.to_string(),
+            size: 100,
+            data_types: vec!["demographic".to_string(), "clinical".to_string()],
+        })
+    }
+
+    async fn setup_synthetic_data(&self, setup: &SyntheticDataSetup, server_app_id: &str) -> Result<SyntheticDataSetup, Box<dyn std::error::Error>> {
+        // Implement the logic to setup synthetic data
+        // This is a placeholder implementation
+        Ok(setup.clone())
+    }
+
+    async fn generate_synthetic_data(&self, setup: &SyntheticDataSetup, server_app_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+        // Implement the logic to generate synthetic data
+        // This is a placeholder implementation
+        Ok(())
     }
 }

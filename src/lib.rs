@@ -12,16 +12,10 @@ API users could do use h_bank::prelude::*; to get all common imports at once.
 */
 pub mod api_prelude {
     pub use crate::api::public_api::{configure_app, submit_analysis, get_job_status, get_result};
-    pub use crate::api::models::{
-        AppState,
-        JobStatus,
-        AnalysisRequest,
-        DataType,
-        EnvironmentSpecs,
-        ResourceRequirements,
-    };
+    pub use crate::api::shared_models::*;
     pub use crate::api::data_manager::DataManager;
     pub use crate::api::execution_engine::ExecutionEngine;
     pub use crate::api::archive_system::ArchiveSystem;
     pub use crate::api::result_processor::ResultProcessor;
+    pub use crate::api::app_state::*;
 }
