@@ -1,38 +1,39 @@
-use async_trait::async_trait;
-use crate::api::shared_models::{CohortInfo, SyntheticDataSetup};
-
-#[async_trait]
-pub trait DataManagerTrait: Send + Sync {
-    async fn get_cohort_info(&self, cohort_id: &str, server_app_id: &str) -> Result<CohortInfo, Box<dyn std::error::Error>>;
-    async fn setup_synthetic_data(&self, setup: &SyntheticDataSetup, server_app_id: &str) -> Result<SyntheticDataSetup, Box<dyn std::error::Error>>;
-    async fn generate_synthetic_data(&self, setup: &SyntheticDataSetup, server_app_id: &str) -> Result<(), Box<dyn std::error::Error>>;
-}
+use std::sync::RwLock;
+use std::collections::{HashMap, HashSet};
+use crate::api::shared_models::AnalysisResult;
 
 pub struct DataManager {
-    // Add any necessary fields
+    analysis_results: RwLock<HashMap<String, AnalysisResult>>,
+    valid_server_app_ids: RwLock<HashSet<String>>,
 }
 
-#[async_trait]
-impl DataManagerTrait for DataManager {
-    async fn get_cohort_info(&self, cohort_id: &str, server_app_id: &str) -> Result<CohortInfo, Box<dyn std::error::Error>> {
-        // Implement the logic to retrieve cohort info
-        // This is a placeholder implementation
-        Ok(CohortInfo {
-            cohort_id: cohort_id.to_string(),
-            size: 100,
-            data_types: vec!["demographic".to_string(), "clinical".to_string()],
-        })
+impl DataManager {
+    pub fn new() -> Self {
+        DataManager {
+            analysis_results: RwLock::new(HashMap::new()),
+            valid_server_app_ids: RwLock::new(HashSet::new()),
+        }
     }
 
-    async fn setup_synthetic_data(&self, setup: &SyntheticDataSetup, server_app_id: &str) -> Result<SyntheticDataSetup, Box<dyn std::error::Error>> {
-        // Implement the logic to setup synthetic data
-        // This is a placeholder implementation
-        Ok(setup.clone())
-    }
-
-    async fn generate_synthetic_data(&self, setup: &SyntheticDataSetup, server_app_id: &str) -> Result<(), Box<dyn std::error::Error>> {
-        // Implement the logic to generate synthetic data
-        // This is a placeholder implementation
+    pub fn store_analysis_result(&self, result: &AnalysisResult) -> Result<(), String> {
+        let mut results = self.analysis_results.write().map_err(|e| e.to_string())?;
+        results.insert(result.job_id.clone(), result.clone());
         Ok(())
+    }
+
+    pub fn get_analysis_result(&self, job_id: &str) -> Option<AnalysisResult> {
+        let results = self.analysis_results.read().ok()?;
+        results.get(job_id).cloned()
+    }
+
+    pub fn validate_server_app_id(&self, server_app_id: &str) -> bool {
+        let valid_ids = self.valid_server_app_ids.read().unwrap();
+        valid_ids.contains(server_app_id)
+    }
+
+    // Method to add valid server app IDs (you might want to make this more secure in a real-world scenario)
+    pub fn add_valid_server_app_id(&self, server_app_id: String) {
+        let mut valid_ids = self.valid_server_app_ids.write().unwrap();
+        valid_ids.insert(server_app_id);
     }
 }

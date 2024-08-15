@@ -1,16 +1,17 @@
 use std::fmt::Debug;
 use time::Date;
+use serde::{Serialize, Deserialize};
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct EntityId(pub String);
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PartyInfo {
     pub name: String,
     pub entity_id: EntityId,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Party {
     HBank(PartyInfo),
     DataOriginator(PartyInfo),
@@ -54,7 +55,7 @@ impl Party {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum PartyType {
     HBank,
     DataOriginator,
@@ -67,7 +68,7 @@ pub enum PartyType {
     Advertiser,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum StorageExchangeLegalStructure {
     AgentStorageAgreement { agent: Party, h_bank: Party },
     AgentExchangeAgreement { agent: Party, h_bank: Party },
@@ -75,17 +76,17 @@ pub enum StorageExchangeLegalStructure {
     GeneratorExchangeAgreement { generator: Party, h_bank: Party },
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum DonationLegalStructure {
     PhilanthropicAgreement { donor: Party, h_bank: Party },
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum AdLegalStructure {
     AdvertiserAgreement { advertiser: Party, h_bank: Party },
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum TransactionLegalStructure {
     ConsultAgreement { agent: Party, consultant: Party, h_bank: Party },
     DirectSale { agent_a: Party, agent_b: Party, generators: Vec<Party>, h_bank: Party },
@@ -98,7 +99,7 @@ pub enum TransactionLegalStructure {
     DataExchangeAgreement { agents_a: Vec<Party>, agents_b: Vec<Party>, generators: Vec<Party>, h_bank: Party },
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum TwoPartyLegalStructure {
     Storage_or_Exchange(StorageExchangeLegalStructure),
     Donation(DonationLegalStructure),
@@ -106,37 +107,37 @@ pub enum TwoPartyLegalStructure {
 }
 
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ContractCategory {
     TwoParty(TwoPartyLegalStructure),
     ThreePlusParty(TransactionLegalStructure),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ContractLegalFramework {
     UCC,
     CommonLaw,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum GeneratorRateSpecification {
     KnowledgeRate(f64),
     UsageRate(f64),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum IndividualContributionLevel {
     DataOnly,
     DataAndParticipation,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum DataPrivacyLevel {
     HIPPA_minus,
     HIPPA_deidentified,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Terms {
     pub data_borrowers_full_list: Option<Vec<String>>,
     pub data_request_explanation: Option<String>,

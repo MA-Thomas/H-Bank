@@ -1,6 +1,7 @@
 use std::collections::{HashMap,HashSet};
 use crate::contracts::health_data_contract::HealthDataContract;
 use crate::contracts::structs_enums::{EntityId, DataPrivacyLevel, Party};
+use serde::{Serialize, Deserialize};
 
 pub struct CohortManager {
     cohorts: HashMap<String, Cohort>,
@@ -88,6 +89,8 @@ impl Cohort {
             .len();
     }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CohortSummary {
     pub cohort_id: String,
     pub privacy_level: DataPrivacyLevel,

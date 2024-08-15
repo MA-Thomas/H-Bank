@@ -1,12 +1,6 @@
 use serde::{Serialize, Deserialize};
 use std::path::PathBuf;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct CohortInfo {
-    pub cohort_id: String,
-    pub size: usize,
-    pub data_types: Vec<String>,
-}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SyntheticDataSetup {
