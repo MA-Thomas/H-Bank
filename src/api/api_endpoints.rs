@@ -44,7 +44,7 @@ pub async fn get_code_submission(
     }
 }
 
-pub async fn get_cohort_info(
+pub async fn get_cohort_summary(
     req: HttpRequest,
     cohort_id: web::Path<String>,
     app_state: web::Data<AppState>,
@@ -53,7 +53,7 @@ pub async fn get_cohort_info(
         return response;
     }
 
-    match app_state.cohort_manager.get_cohort_info(&cohort_id) {
+    match app_state.cohort_manager.get_cohort_summary(&cohort_id) {
         Ok(info) => HttpResponse::Ok().json(info),
         Err(e) => HttpResponse::InternalServerError().json(json!({
             "error": format!("Failed to retrieve cohort info: {}", e)
@@ -100,7 +100,7 @@ pub fn configure_api(cfg: &mut web::ServiceConfig) {
         web::scope("/api")
             .route("/submit_code", web::post().to(submit_code))
             .route("/code/{job_id}", web::get().to(get_code_submission))
-            .route("/cohort/{cohort_id}", web::get().to(get_cohort_info))
+            .route("/cohort/{cohort_id}", web::get().to(get_cohort_summary))
             .route("/synthetic/setup", web::post().to(setup_synthetic_data))
             .route("/result", web::post().to(submit_analysis_result))
     );

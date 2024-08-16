@@ -1,8 +1,8 @@
 use std::sync::Arc;
 use crate::api::data_manager::DataManager;
 use crate::api::code_storage::CodeStorage;
-use crate::data_management::cohort_manager::CohortManager;
-use crate::data_management::synthetic_data_generator::SyntheticDataGenerator;
+use crate::data_management::CohortManager;
+use crate::data_management::SyntheticDataGenerator;
 
 pub struct AppState {
     pub data_manager: Arc<DataManager>,
