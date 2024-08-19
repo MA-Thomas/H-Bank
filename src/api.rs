@@ -1,19 +1,15 @@
-/*
-Declare the submodules within the api module.
-*/
-
-pub mod app_state;
-pub mod data_manager;
-pub mod archive_system;
-pub mod code_storage;
+mod interface;
+mod data_manager;
+mod archive_system;
+mod code_storage;
 pub mod shared_models;
-pub mod api_endpoints; 
 
-pub use app_state::AppState;
-pub use data_manager::DataManager;
-pub use archive_system::ArchiveSystem;
-pub use code_storage::CodeStorage;
+pub use interface::HBankInterface;
 
-// Flatten
-pub use shared_models::*;
-pub use api_endpoints::*;
+// This will be used for future API implementation
+pub mod api_endpoints {
+    // This will be implemented in the future when adding API functionality
+    pub fn configure() {
+        // API route configuration will be added here later
+    }
+}
