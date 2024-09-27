@@ -7,6 +7,10 @@ use crate::data_management::synthetic_data_generator::SyntheticDataGenerator;
 use super::shared_models::*;
 use crate::api_prelude::CohortSummary;
 
+/*
+The HBankInterface is meant to be imported and used by HBroker-ServerApp
+*/
+
 pub struct HBankInterface {
     data_manager: DataManager,
     archive_system: ArchiveSystem,

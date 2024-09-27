@@ -12,10 +12,12 @@ pub struct SyntheticDataSetup {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CodeSubmission {
     pub cohort_id: String,
-    pub code: String,
-    pub dependencies: Vec<String>,
+    pub wasm_code: Vec<u8>,
+    pub entry_point: String,
     pub data_dir: PathBuf,
+    pub execution_mode: ExecutionMode,
 }
+
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AnalysisResult {
@@ -26,3 +28,10 @@ pub struct AnalysisResult {
 }
 
 // Add any other shared structures here
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ExecutionMode {
+    // Whether wasm module is executed on real data stored locally (on Borrower's server) or remote (on HBank server)
+    Local,
+    Remote,
+}
+
